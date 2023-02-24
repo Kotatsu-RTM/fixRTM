@@ -102,7 +102,7 @@
  
           this.speed = par1;
        }
-@@ -266,18 +273,20 @@
+@@ -266,34 +273,39 @@
        }
     }
  
@@ -125,7 +125,14 @@
           } else if (type == TrainState.TrainStateType.Door) {
              int i = data & 1;
              int j = data >> 1;
-@@ -290,10 +299,11 @@
+             int k = formationentry.train.getTrainDirection() == 0 ? j << 1 | i : i << 1 | j;
+             formationentry.train.setTrainStateData_NoSync(type, (byte)k);
++         } else if (type == TrainState.TrainStateType.AutoLinking) {
++            formationentry.train.setAutoLinkingState(data > 0);
+          } else {
+             formationentry.train.setTrainStateData_NoSync(type, data);
+          }
+       }
  
     }
  

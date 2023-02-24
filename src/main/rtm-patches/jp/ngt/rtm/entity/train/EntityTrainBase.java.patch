@@ -1,6 +1,15 @@
 --- a/jp/ngt/rtm/entity/train/EntityTrainBase.java
 +++ b/jp/ngt/rtm/entity/train/EntityTrainBase.java
-@@ -54,28 +54,29 @@
+@@ -1,8 +1,7 @@
+ package jp.ngt.rtm.entity.train;
+ 
+-import java.util.HashSet;
+ import java.util.Random;
+ import java.util.Set;
+ import jp.ngt.ngtlib.io.NGTLog;
+ import jp.ngt.ngtlib.math.NGTMath;
+ import jp.ngt.ngtlib.math.PooledVec3;
+@@ -54,28 +53,31 @@
  import net.minecraftforge.fml.relauncher.SideOnly;
  
  public abstract class EntityTrainBase extends EntityVehicleBase<ModelSetTrain> implements IChunkLoader {
@@ -27,12 +36,14 @@
     private int prevChunkCoordX;
     private int prevChunkCoordZ;
 +   private int prevChunkLoaderRadius;
++
++   private boolean autoLinkingState;
  
     public EntityTrainBase(World world) {
        super(world);
        this.setSize(2.75F, 1.1875F);
        this.noClip = true;
-@@ -92,10 +93,11 @@
+@@ -92,10 +94,11 @@
  
     protected void entityInit() {
        super.entityInit();
@@ -44,7 +55,7 @@
     protected void writeEntityToNBT(NBTTagCompound nbt) {
        super.writeEntityToNBT(nbt);
        NBTTagCompound nbttagcompound = new NBTTagCompound();
-@@ -126,12 +128,15 @@
+@@ -126,12 +129,15 @@
     private void readFormationData(NBTTagCompound nbt) {
        long i = nbt.getLong("FormationId");
        byte b0 = nbt.getByte("EntryPos");
@@ -61,7 +72,19 @@
           formation.setTrain(this, b0, b1);
        }
  
-@@ -293,25 +298,25 @@
+@@ -174,10 +180,11 @@
+       if (this.world.isRemote) {
+          this.spawnSmoke();
+       } else {
+          this.updateChunks();
+          this.updateATS();
++         this.updateAutoLinkingState();
+       }
+ 
+    }
+ 
+    protected void updateFallState() {
+@@ -293,25 +300,25 @@
           float f = this.getSpeed();
           int i = this.getNotch();
           Random random = this.world.rand;
@@ -91,7 +114,7 @@
                 double d6 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 double d7 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 this.world.spawnParticle(enumparticletypes, d2, d3, d4, d6, 0.25D, d7, new int[0]);
-@@ -441,25 +446,34 @@
+@@ -441,25 +448,34 @@
              }
           }
  
@@ -129,7 +152,20 @@
              this.setSpeed(f);
           }
  
-@@ -655,11 +669,11 @@
+@@ -565,11 +581,11 @@
+ 
+          return true;
+       }
+    }
+ 
+-   protected void concatenation(EntityBogie bogie, EntityPlayer player) {
++   public void concatenation(EntityBogie bogie, EntityPlayer player) {
+       int i = bogie.getBogieId();
+       if (i >= 0) {
+          if (this.getConnectedTrain(i) == null) {
+             bogie.isActivated = true;
+             NGTLog.sendChatMessage(player, "message.train.concatenation_mode", new Object[0]);
+@@ -655,11 +671,11 @@
        if (!this.world.isRemote && par2.getTrain() != null) {
           int i = par1.getBogieId();
           int j = par2.getBogieId();
@@ -142,7 +178,7 @@
                 entityplayer = (EntityPlayer)this.getFirstPassenger();
              } else if (par2.getTrain().getFirstPassenger() instanceof EntityPlayer) {
                 entityplayer = (EntityPlayer)par2.getTrain().getFirstPassenger();
-@@ -672,38 +686,38 @@
+@@ -672,38 +688,38 @@
        }
  
     }
@@ -186,7 +222,7 @@
     public boolean existBogies() {
        return this.getBogie(0) != null && this.getBogie(1) != null;
     }
-@@ -760,10 +774,11 @@
+@@ -760,10 +776,11 @@
     public int getTrainDirection() {
        return this.getVehicleState(TrainState.TrainStateType.Direction);
     }
@@ -198,7 +234,7 @@
        } else {
           this.formation.setTrainDirection((byte)par1, this);
        }
-@@ -793,33 +808,46 @@
+@@ -793,33 +810,46 @@
     public boolean addNotch(Entity driver, int par2) {
        if (par2 != 0) {
           int i = this.getNotch();
@@ -250,7 +286,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -883,10 +911,11 @@
+@@ -883,10 +913,11 @@
           this.releaseTicket();
        }
  
@@ -262,7 +298,7 @@
     public boolean isChunkLoaderEnable() {
        return this.getVehicleState(TrainState.TrainStateType.ChunkLoader) > 0;
     }
-@@ -903,11 +932,10 @@
+@@ -903,11 +934,10 @@
     private boolean requestTicket() {
        Ticket ticket = RTMChunkManager.INSTANCE.getNewTicket(this.world, Type.ENTITY);
        if (ticket != null) {
@@ -274,7 +310,7 @@
           return true;
        } else {
           NGTLog.debug("[RTM] Failed to get ticket (Chunk Loader)");
-@@ -931,20 +959,26 @@
+@@ -931,24 +961,52 @@
        if (!this.world.isRemote) {
           if (this.ticket == null && !this.requestTicket()) {
              return;
@@ -302,3 +338,29 @@
     }
  
     private void setupChunks(int xChunk, int zChunk) {
+       int i = this.getVehicleState(TrainState.TrainStateType.ChunkLoader);
+       RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
+    }
++
++   public boolean getAutoLinkingState() {
++      return autoLinkingState;
++   }
++
++   public void setAutoLinkingState(boolean state) {
++      autoLinkingState = state;
++   }
++
++   private void updateAutoLinkingState() {
++      if (!autoLinkingState) return;
++
++      if (getNotch() != 1) {
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++         return;
++      }
++
++      if (getSpeed() > 15.0F / 72) {
++         setNotch(0);
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++      }
++   }
+ }

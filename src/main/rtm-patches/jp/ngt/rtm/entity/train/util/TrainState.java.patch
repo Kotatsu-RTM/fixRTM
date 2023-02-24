@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/entity/train/util/TrainState.java
 +++ b/jp/ngt/rtm/entity/train/util/TrainState.java
-@@ -47,11 +47,27 @@
+@@ -47,20 +47,37 @@
        return TrainState.TrainStateType.Door;
     }
  
@@ -29,7 +29,18 @@
        Light(5, "light", 0, 2),
        Pantograph(6, "pantograph", 0, 1),
        ChunkLoader(7, "chunk_loader", 0, 8),
-@@ -79,7 +95,41 @@
+       Destination(8, "destination", 0, 127),
+       Announcement(9, "announcement", 0, 127),
+       Role(10, "direction", 0, 2),
+-      InteriorLight(11, "interior_light", 0, 2);
++      InteriorLight(11, "interior_light", 0, 2),
++      AutoLinking(12, "auto_linking", 0, 1);
+ 
+       public final int id;
+       public final String stateName;
+       public final byte min;
+       public final byte max;
+@@ -79,7 +96,41 @@
              }
           }
  
