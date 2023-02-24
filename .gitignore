@@ -185,3 +185,5 @@ gradle-app.setting
 /src/main/rtm-1
 
 /logs
+
+.idea/
