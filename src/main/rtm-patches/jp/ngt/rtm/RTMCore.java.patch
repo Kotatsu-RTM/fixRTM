@@ -1,0 +1,31 @@
+--- a/jp/ngt/rtm/RTMCore.java
++++ b/jp/ngt/rtm/RTMCore.java
+@@ -1,13 +1,13 @@
+ package jp.ngt.rtm;
+ 
++import com.anatawa12.fixRtm.rtm.world.NewChunkManager;
+ import jp.ngt.ngtlib.util.IMod;
+ import jp.ngt.rtm.command.RTMCommand;
+ import jp.ngt.rtm.event.RTMEventHandler;
+ import jp.ngt.rtm.gui.RTMGuiHandler;
+ import jp.ngt.rtm.msims.MSIMS;
+-import jp.ngt.rtm.world.RTMChunkManager;
+ import net.minecraftforge.common.ForgeChunkManager;
+ import net.minecraftforge.common.MinecraftForge;
+ import net.minecraftforge.common.config.Configuration;
+ import net.minecraftforge.common.config.Property;
+ import net.minecraftforge.fml.common.FMLLog;
+@@ -161,12 +161,11 @@
+       RTMRecipe.init();
+       RTMPacket.init();
+       RTMAdvancement.init();
+       NetworkRegistry.INSTANCE.registerGuiHandler(this, new RTMGuiHandler());
+       proxy.preInit();
+-      ForgeChunkManager.setForcedChunkLoadingCallback(this, RTMChunkManager.INSTANCE);
+-      MinecraftForge.EVENT_BUS.register(RTMChunkManager.INSTANCE);
++      ForgeChunkManager.setForcedChunkLoadingCallback(this, NewChunkManager.INSTANCE);
+    }
+ 
+    @EventHandler
+    public void init(FMLInitializationEvent event) {
+       proxy.init();
