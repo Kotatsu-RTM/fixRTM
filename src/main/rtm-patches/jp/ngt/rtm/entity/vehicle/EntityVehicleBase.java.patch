@@ -1,6 +1,86 @@
 --- a/jp/ngt/rtm/entity/vehicle/EntityVehicleBase.java
 +++ b/jp/ngt/rtm/entity/vehicle/EntityVehicleBase.java
-@@ -268,11 +268,10 @@
+@@ -1,9 +1,11 @@
+ package jp.ngt.rtm.entity.vehicle;
+ 
+-import java.util.ArrayList;
+-import java.util.List;
++import java.util.*;
++
++import com.anatawa12.fixRtm.rtm.entity.vehicle.EntityVehicleBaseKt;
++import com.anatawa12.fixRtm.rtm.world.NewChunkManager;
+ import jp.ngt.ngtlib.entity.EntityCustom;
+ import jp.ngt.ngtlib.math.NGTMath;
+ import jp.ngt.ngtlib.math.PooledVec3;
+ import jp.ngt.ngtlib.math.Vec3;
+ import jp.ngt.ngtlib.network.PacketNBT;
+@@ -26,21 +28,23 @@
+ import net.minecraft.entity.MoverType;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.util.math.AxisAlignedBB;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
++import net.minecraft.world.WorldServer;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+ public abstract class EntityVehicleBase<T extends ModelSetVehicleBase> extends EntityCustom implements IResourceSelector {
+    public static final int MAX_SEAT_ROTATION = 45;
+    public static final int MAX_DOOR_MOVE = 60;
+    public static final int MAX_PANTOGRAPH_MOVE = 40;
+    public static final float TO_ANGULAR_VELOCITY = 114.59156F;
+    private ResourceState<T> state = new ResourceState<>(this.getSubType(), this);
+    private ScriptExecuter executer = new ScriptExecuter();
+-   protected List<EntityFloor> vehicleFloors = new ArrayList();
++   protected UUID[] savedVehicleFloors;
++   protected List<EntityFloor> vehicleFloors = new ArrayList<>();
+    protected final IUpdateVehicle soundUpdater;
+    private boolean floorLoaded;
+    private boolean tracked;
+    private EntityLivingBase rider;
+    public float rotationRoll;
+@@ -100,14 +104,25 @@
+    protected void entityInit() {
+    }
+ 
+    protected void writeEntityToNBT(NBTTagCompound nbt) {
+       nbt.setTag("State", this.getResourceState().writeToNBT());
++
++      if (!world.isRemote) {
++         nbt.setIntArray("chunks", EntityVehicleBaseKt.getChunkPosArray(this));
++         nbt.setByteArray("vehicleFloors", EntityVehicleBaseKt.floorsUuidToByteArray(vehicleFloors));
++      }
+    }
+ 
+    protected void readEntityFromNBT(NBTTagCompound nbt) {
+       this.getResourceState().readFromNBT(nbt.getCompoundTag("State"));
++
++      if (!world.isRemote && nbt.hasKey("chunks") && nbt.hasKey("vehicleFloors")) {
++         NewChunkManager.INSTANCE.loadChunks(this, EntityVehicleBaseKt.intArrayToChunks(nbt.getIntArray("chunks")));
++         savedVehicleFloors = EntityVehicleBaseKt.byteArrayToUuidArray(nbt.getByteArray("vehicleFloors"));
++      }
++
+       if (this.world != null && this.world.isRemote) {
+          this.updateResourceState();
+       }
+ 
+    }
+@@ -138,10 +153,14 @@
+ 
+    public void syncData() {
+       this.updateResourceState();
+    }
+ 
++   public List<EntityFloor> getFloors() {
++      return new ArrayList<>(vehicleFloors);
++   }
++
+    public void setFloor(EntityFloor par1) {
+       this.vehicleFloors.add(par1);
+    }
+ 
+    public void setDead() {
+@@ -268,11 +287,10 @@
  
        try {
           ModelSetBase modelsetbase = this.getResourceState().getResourceSet();
@@ -12,7 +92,51 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
-@@ -532,21 +531,33 @@
+@@ -449,30 +467,41 @@
+    public float getMoveDir() {
+       return 1.0F;
+    }
+ 
+    private void setupFloors() {
++      if (savedVehicleFloors != null) {
++         for (UUID uuid : this.savedVehicleFloors) {
++            Entity entity = ((WorldServer) world).getEntityFromUuid(uuid);
++            if (entity instanceof EntityFloor) vehicleFloors.add((EntityFloor) entity);
++         }
++         savedVehicleFloors = null;
++      }
++
++      ArrayList<EntityFloor> removedEntities = new ArrayList<>();
++
+       for(EntityFloor entityfloor : this.vehicleFloors) {
+          if (entityfloor != null) {
++            removedEntities.add(entityfloor);
+             entityfloor.setDead();
+          }
+       }
+ 
++      vehicleFloors.removeAll(removedEntities);
++
+       T t = this.getResourceState().getResourceSet();
+       this.floorLoaded = true;
+ 
+       for(int i = 0; i < t.getConfig().getSlotPos().length; ++i) {
+          float[] afloat = t.getConfig().getSlotPos()[i];
+          EntityFloor entityfloor1 = new EntityFloor(this.world, this, new float[]{afloat[0], afloat[1] + this.getVehicleYOffset(), afloat[2]}, (byte)((int)afloat[3]));
+          if (!this.world.spawnEntity(entityfloor1)) {
+             this.floorLoaded = false;
+             break;
+          }
+-
+          this.vehicleFloors.add(entityfloor1);
+       }
+-
+    }
+ 
+    public String getName() {
+       return this.getResourceState().getName();
+    }
+@@ -532,21 +561,33 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
