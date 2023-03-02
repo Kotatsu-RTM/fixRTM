@@ -9,7 +9,6 @@ import net.minecraft.world.WorldServer
 import net.minecraftforge.common.ForgeChunkManager
 import net.minecraftforge.common.ForgeChunkManager.LoadingCallback
 import net.minecraftforge.common.ForgeChunkManager.Ticket
-import org.apache.logging.log4j.LogManager
 
 object NewChunkManager: LoadingCallback {
     private val tickets = mutableMapOf<EntityVehicleBase<*>, Ticket>()
@@ -37,15 +36,11 @@ object NewChunkManager: LoadingCallback {
         with(loadingChunks.filterNot { currentChunks.contains(it) }) {
             forEach { ForgeChunkManager.unforceChunk(ticket, it) }
             loadingChunks.removeAll(this.toSet())
-
-            LogManager.getLogger().info("Old chunks: $this")
         }
         //New chunks
         with(currentChunks.filterNot { loadingChunks.contains(it) }) {
             forEach { ForgeChunkManager.forceChunk(ticket, it) }
             loadingChunks.addAll(this.toSet())
-
-            LogManager.getLogger().info("New chunks: $this")
         }
     }
 
@@ -60,9 +55,6 @@ object NewChunkManager: LoadingCallback {
     }
 
     override fun ticketsLoaded(tickets: MutableList<Ticket>, world: World) {
-        tickets.forEach {
-            LogManager.getLogger().info(it.entity)
-        }
     }
 
     private fun getTicket(vehicle: EntityVehicleBase<*>) =
