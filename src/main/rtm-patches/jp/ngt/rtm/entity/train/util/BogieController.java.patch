@@ -1,0 +1,21 @@
+--- a/jp/ngt/rtm/entity/train/util/BogieController.java
++++ b/jp/ngt/rtm/entity/train/util/BogieController.java
+@@ -11,13 +11,17 @@
+ import net.minecraft.util.math.MathHelper;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+ public final class BogieController {
+-   private EntityBogie[] bogies = new EntityBogie[2];
++   private final EntityBogie[] bogies = new EntityBogie[2];
+    private int tickCount;
+ 
++   public EntityBogie[] getBogies() {
++      return bogies;
++   }
++
+    public EntityBogie getBogie(EntityTrainBase train, int bogieId) {
+       if (this.bogies[bogieId] == null) {
+          if (train.world.isRemote) {
+             this.setupBogieOnClient(train, bogieId);
+          } else {
