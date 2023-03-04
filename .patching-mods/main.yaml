@@ -81,6 +81,7 @@ mods:
       - jp.ngt.rtm.electric.TileEntityDummyEW
       - jp.ngt.rtm.electric.TileEntityElectricalWiring
       - jp.ngt.rtm.electric.TileEntitySignal
+      - jp.ngt.rtm.electric.TileEntitySignalConverter
       - jp.ngt.rtm.entity.ai.EntityAITravelByTrain
       - jp.ngt.rtm.entity.npc.EntityMotorman
       - jp.ngt.rtm.entity.npc.EntityNPC

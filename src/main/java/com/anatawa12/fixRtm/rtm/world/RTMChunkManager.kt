@@ -24,5 +24,4 @@ fun getChunksAround(set: MutableSet<ChunkPos>, xChunk: Int, zChunk: Int, radius:
     list.sortByDescending { max(abs(it.x - xChunk), abs(it.z - zChunk)) }
 
     set.addAll(list)
-
 }

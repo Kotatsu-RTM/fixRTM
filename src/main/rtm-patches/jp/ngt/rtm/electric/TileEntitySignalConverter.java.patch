@@ -1,0 +1,321 @@
+--- a/jp/ngt/rtm/electric/TileEntitySignalConverter.java
++++ b/jp/ngt/rtm/electric/TileEntitySignalConverter.java
+@@ -1,43 +1,35 @@
+ package jp.ngt.rtm.electric;
+ 
+ import java.util.ArrayList;
+ import java.util.HashMap;
+-import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
+-import java.util.Set;
+ import jp.ngt.ngtlib.block.TileEntityCustom;
+-import jp.ngt.ngtlib.io.NGTLog;
+-import jp.ngt.rtm.world.IChunkLoader;
+-import jp.ngt.rtm.world.RTMChunkManager;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.util.EnumFacing;
+ import net.minecraft.util.ITickable;
+-import net.minecraft.util.math.ChunkPos;
+-import net.minecraftforge.common.ForgeChunkManager;
+-import net.minecraftforge.common.ForgeChunkManager.Ticket;
+-import net.minecraftforge.common.ForgeChunkManager.Type;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import org.jetbrains.annotations.NotNull;
+ 
+ public abstract class TileEntitySignalConverter extends TileEntityCustom implements IProvideElectricity, ITickable {
+    protected TileEntitySignalConverter.ComparatorType comparator = TileEntitySignalConverter.ComparatorType.EQUAL;
+    protected int signalOnTrue;
+    protected int signalOnFalse;
+    protected int signal;
+ 
+-   public void readFromNBT(NBTTagCompound nbt) {
++   public void readFromNBT(@NotNull NBTTagCompound nbt) {
+       super.readFromNBT(nbt);
+-      int i = nbt.getInteger("comparatorIndex");
+-      TileEntitySignalConverter.ComparatorType tileentitysignalconverter$comparatortype = TileEntitySignalConverter.ComparatorType.getType(i);
+-      int j = nbt.getInteger("signal_0");
+-      int k = nbt.getInteger("signal_1");
+-      this.setSignalProp(j, k, tileentitysignalconverter$comparatortype);
++      int index = nbt.getInteger("comparatorIndex");
++      TileEntitySignalConverter.ComparatorType type = TileEntitySignalConverter.ComparatorType.getType(index);
++      int onTrue = nbt.getInteger("signal_0");
++      int onFalse = nbt.getInteger("signal_1");
++      this.setSignalProp(onTrue, onFalse, type);
+    }
+ 
+-   public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
++   public @NotNull NBTTagCompound writeToNBT(@NotNull NBTTagCompound nbt) {
+       super.writeToNBT(nbt);
+       nbt.setInteger("comparatorIndex", this.comparator.id);
+       nbt.setInteger("signal_0", this.signalOnTrue);
+       nbt.setInteger("signal_1", this.signalOnFalse);
+       return nbt;
+@@ -52,14 +44,14 @@
+ 
+    public int[] getSignalLevel() {
+       return new int[]{this.signalOnTrue, this.signalOnFalse};
+    }
+ 
+-   public void setSignalProp(int par1, int par2, TileEntitySignalConverter.ComparatorType par3) {
+-      this.signalOnTrue = par1;
+-      this.signalOnFalse = par2;
+-      this.comparator = par3;
++   public void setSignalProp(int onTrue, int onFalse, TileEntitySignalConverter.ComparatorType type) {
++      this.signalOnTrue = onTrue;
++      this.signalOnFalse = onFalse;
++      this.comparator = type;
+       this.markDirty();
+    }
+ 
+    public void markDirty() {
+       super.markDirty();
+@@ -73,22 +65,15 @@
+       return 256.0D;
+    }
+ 
+    public static TileEntitySignalConverter createTileEntity(int par1) {
+       switch(SignalConverterType.getType(par1)) {
+-      case RSIn:
+-         return new TileEntitySignalConverter.TileEntitySC_RSIn();
+-      case RSOut:
+-         return new TileEntitySignalConverter.TileEntitySC_RSOut();
+-      case Increment:
+-         return new TileEntitySignalConverter.TileEntitySC_Increment();
+-      case Decrement:
+-         return new TileEntitySignalConverter.TileEntitySC_Decrement();
+-      case Wireless:
+-         return new TileEntitySignalConverter.TileEntitySC_Wireless();
+-      default:
+-         return new TileEntitySignalConverter.TileEntitySC_RSIn();
++         case RSOut: return new TileEntitySignalConverter.TileEntitySC_RSOut();
++         case Increment: return new TileEntitySignalConverter.TileEntitySC_Increment();
++         case Decrement: return new TileEntitySignalConverter.TileEntitySC_Decrement();
++         case Wireless: return new TileEntitySignalConverter.TileEntitySC_Wireless();
++         default: return new TileEntitySignalConverter.TileEntitySC_RSIn();
+       }
+    }
+ 
+    public static enum ComparatorType {
+       EQUAL(0, "=="),
+@@ -99,11 +84,11 @@
+       NOT_EQUAL(5, "!=");
+ 
+       public final byte id;
+       public final String operator;
+ 
+-      private ComparatorType(int par1, String par2) {
++      ComparatorType(int par1, String par2) {
+          this.id = (byte)par1;
+          this.operator = par2;
+       }
+ 
+       public static TileEntitySignalConverter.ComparatorType getType(int par1) {
+@@ -125,19 +110,12 @@
+       public int getElectricity() {
+          return this.signal;
+       }
+ 
+       public void setElectricity(int x, int y, int z, int level) {
+-         int i;
+-         if (level > 1) {
+-            --level;
+-            i = level;
+-         } else {
+-            i = level;
+-         }
+-
+-         this.signal = i;
++         if (level > 1) --level;
++         this.signal = level;
+       }
+    }
+ 
+    public static class TileEntitySC_Increment extends TileEntitySignalConverter {
+       public int getRSOutput() {
+@@ -217,81 +195,41 @@
+          }
+ 
+       }
+    }
+ 
+-   public static class TileEntitySC_Wireless extends TileEntitySignalConverter implements IChunkLoader {
+-      private static Map<Integer, List<TileEntitySignalConverter.TileEntitySC_Wireless>> ADAPTER_MAP = new HashMap<>();
++   public static class TileEntitySC_Wireless extends TileEntitySignalConverter {
++      private static final Map<Integer, List<TileEntitySignalConverter.TileEntitySC_Wireless>> ADAPTER_MAP = new HashMap<>();
+       private int prevChannel = 0;
+-      private Ticket ticket;
+-      private final Set<ChunkPos> loadedChunks = new HashSet();
+-      private boolean finishSetup;
+ 
+       public TileEntitySC_Wireless() {
+          List<TileEntitySignalConverter.TileEntitySC_Wireless> list = this.getList(this.prevChannel);
+          list.add(this);
+       }
+ 
+       private List<TileEntitySignalConverter.TileEntitySC_Wireless> getList(int par1) {
+-         List<TileEntitySignalConverter.TileEntitySC_Wireless> list = ADAPTER_MAP.get(par1);
+-         if (list == null) {
+-            list = new ArrayList<>();
+-            ADAPTER_MAP.put(par1, list);
+-         }
+-
+-         return list;
++         return ADAPTER_MAP.computeIfAbsent(par1, k -> new ArrayList<>());
+       }
+ 
+       private void updateAntennaList() {
+          List<TileEntitySignalConverter.TileEntitySC_Wireless> list = this.getList(this.prevChannel);
+-         if (list.contains(this)) {
+-            list.remove(this);
+-         }
++         list.remove(this);
+ 
+          List<TileEntitySignalConverter.TileEntitySC_Wireless> list1 = this.getList(this.getChannel());
+          list1.add(this);
+          this.prevChannel = this.getChannel();
+       }
+ 
+-      public void update() {
+-         super.update();
+-         if (!this.world.isRemote) {
+-            this.updateChunks();
+-         }
+-
+-      }
+-
+-      public void invalidate() {
+-         super.invalidate();
+-         if (!this.world.isRemote) {
+-            this.releaseTicket();
+-         }
+-
+-      }
+-
+-      public void validate() {
+-         super.validate();
+-         if (!this.world.isRemote) {
+-            this.updateChunks();
+-         }
+-
+-      }
+-
+       public int getChannel() {
+          return this.signalOnTrue;
+       }
+ 
+-      public int getChunkLoadRange() {
+-         return this.signalOnFalse;
+-      }
+-
+-      public void setSignalProp(int par1, int par2, TileEntitySignalConverter.ComparatorType par3) {
+-         super.setSignalProp(par1, par2, par3);
++      public void setSignalProp(int onTrue, int onFalse, TileEntitySignalConverter.ComparatorType type) {
++         super.setSignalProp(onTrue, onFalse, type);
+          if (this.world == null || !this.world.isRemote) {
+             this.updateAntennaList();
+          }
+-
+       }
+ 
+       public int getRSOutput() {
+          return 0;
+       }
+@@ -299,94 +237,11 @@
+       public int getElectricity() {
+          return this.signal;
+       }
+ 
+       public void setElectricity(int x, int y, int z, int level) {
+-         for(TileEntitySignalConverter.TileEntitySC_Wireless tileentitysignalconverter$tileentitysc_wireless : this.getList(this.getChannel())) {
+-            tileentitysignalconverter$tileentitysc_wireless.setWirelessSignal(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(), level);
+-         }
+-
+-      }
+-
+-      private void setWirelessSignal(int x, int y, int z, int level) {
+-         this.signal = level;
+-      }
+-
+-      private void updateChunks() {
+-         if (this.isChunkLoaderEnable()) {
+-            this.forceChunkLoading();
+-         } else {
+-            this.releaseTicket();
+-         }
+-
+-      }
+-
+-      public boolean isChunkLoaderEnable() {
+-         return this.getChunkLoadRange() > 0;
+-      }
+-
+-      private void releaseTicket() {
+-         this.loadedChunks.clear();
+-         if (this.ticket != null) {
+-            ForgeChunkManager.releaseTicket(this.ticket);
+-            this.ticket = null;
+-         }
+-
+-      }
+-
+-      private boolean requestTicket() {
+-         Ticket ticket = RTMChunkManager.INSTANCE.getNewTicket(this.world, Type.NORMAL);
+-         if (ticket != null) {
+-            int i = this.getChunkLoadRange();
+-            ticket.getModData();
+-            ticket.setChunkListDepth(i);
+-            RTMChunkManager.writeData(ticket, this);
+-            this.setChunkTicket(ticket);
+-            return true;
+-         } else {
+-            NGTLog.debug("[RTM] Failed to get ticket (Chunk Loader)");
+-            return false;
+-         }
+-      }
+-
+-      public void setChunkTicket(Ticket par1) {
+-         if (this.ticket != par1) {
+-            ForgeChunkManager.releaseTicket(this.ticket);
+-         }
+-
+-         this.ticket = par1;
+-         this.finishSetup = false;
+-      }
+-
+-      public void forceChunkLoading() {
+-         int i = this.getPos().getX() >> 4;
+-         int j = this.getPos().getZ() >> 4;
+-         this.forceChunkLoading(i, j);
+-      }
+-
+-      public void forceChunkLoading(int x, int z) {
+-         if (!this.world.isRemote) {
+-            if (this.ticket == null && !this.requestTicket()) {
+-               return;
+-            }
+-
+-            if (!this.finishSetup) {
+-               this.setupChunks(x, z);
+-               this.finishSetup = true;
+-            }
+-
+-            for(ChunkPos chunkpos : this.loadedChunks) {
+-               ForgeChunkManager.forceChunk(this.ticket, chunkpos);
+-            }
+-
+-            ChunkPos chunkpos1 = new ChunkPos(x, z);
+-            ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
++         for(TileEntitySignalConverter.TileEntitySC_Wireless instance : this.getList(this.getChannel())) {
++            instance.signal = level;
+          }
+-
+-      }
+-
+-      private void setupChunks(int xChunk, int zChunk) {
+-         int i = this.getChunkLoadRange();
+-         RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
+       }
+    }
+ }
