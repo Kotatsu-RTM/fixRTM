@@ -29,7 +29,7 @@ fun getChunkPosArray(entity: EntityVehicleBase<*>) =
     mutableSetOf<ChunkPos>().apply {
         addAll(entity.floors.map { entity.world.getChunk(it.position).pos })
         if (entity !is EntityTrainBase) return@apply
-        addAll(entity.bogieController.bogies.map { entity.world.getChunk(it.position).pos })
+        addAll(entity.bogieController.bogies.filterNotNull().map { entity.world.getChunk(it.position).pos })
     }.flatMap { listOf(it.x, it.z) }.toIntArray()
 
 fun intArrayToChunks(array: IntArray) =
