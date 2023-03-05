@@ -92,6 +92,67 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
+@@ -371,25 +389,25 @@
+    @SideOnly(Side.CLIENT)
+    protected void updateAnimation() {
+       ModelSetVehicleBase modelsetvehiclebase = this.getResourceState().getResourceSet();
+       VehicleBaseConfig vehiclebaseconfig = modelsetvehiclebase.getConfig();
+       float f = this.getSpeed();
+-      float f1 = f * 114.59156F * vehiclebaseconfig.wheelRotationSpeed * this.getMoveDir();
++      float f1 = f * TO_ANGULAR_VELOCITY * vehiclebaseconfig.wheelRotationSpeed * this.getMoveDir();
+       this.wheelRotationR = (this.wheelRotationR + f1) % 360.0F;
+       this.wheelRotationL = (this.wheelRotationL + f1) % 360.0F;
+       int i = this.getVehicleState(TrainState.TrainStateType.Door);
+       boolean flag = (i & 1) == 1;
+       this.doorMoveR = this.updateDoorAnimation(modelsetvehiclebase, flag, this.doorMoveR);
+       boolean flag1 = (i & 2) == 2;
+       this.doorMoveL = this.updateDoorAnimation(modelsetvehiclebase, flag1, this.doorMoveL);
+       int j = this.getVehicleState(TrainState.TrainStateType.Pantograph);
+       if (j == TrainState.Pantograph_Down.data) {
+-         if (this.pantograph_F < 40) {
++         if (this.pantograph_F < MAX_PANTOGRAPH_MOVE) {
+             ++this.pantograph_F;
+          }
+ 
+-         if (this.pantograph_B < 40) {
++         if (this.pantograph_B < MAX_PANTOGRAPH_MOVE) {
+             ++this.pantograph_B;
+          }
+       } else {
+          int[] aint = this.getPantographMaxHeight();
+          if (this.pantograph_F > aint[0]) {
+@@ -417,28 +435,28 @@
+       this.rollsignV = par1 * 16;
+    }
+ 
+    @SideOnly(Side.CLIENT)
+    public float getSeatRotation() {
+-      return (float)this.seatRotation / 45.0F;
++      return (float)this.seatRotation / MAX_SEAT_ROTATION;
+    }
+ 
+    protected int[] getPantographMaxHeight() {
+       return new int[]{0, 0};
+    }
+ 
+    protected int updateDoorAnimation(ModelSetVehicleBase modelSet, boolean isOpen, int move) {
+       if (isOpen) {
+-         if (move < 60) {
++         if (move < MAX_DOOR_MOVE) {
+             if (move == 0) {
+                RTMCore.proxy.playSound(this, modelSet.getConfig().sound_DoorOpen, 1.0F, 1.0F);
+             }
+ 
+             ++move;
+          }
+       } else if (move > 0) {
+-         if (move == 60) {
++         if (move == MAX_DOOR_MOVE) {
+             RTMCore.proxy.playSound(this, modelSet.getConfig().sound_DoorClose, 1.0F, 1.0F);
+          }
+ 
+          --move;
+       }
 @@ -449,30 +467,41 @@
     public float getMoveDir() {
        return 1.0F;
