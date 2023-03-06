@@ -1,6 +1,18 @@
 --- a/jp/ngt/rtm/entity/train/EntityBogie.java
 +++ b/jp/ngt/rtm/entity/train/EntityBogie.java
-@@ -126,11 +126,11 @@
+@@ -1,8 +1,11 @@
+ package jp.ngt.rtm.entity.train;
+ 
+ import java.util.List;
++
++import com.anatawa12.fixRtm.network.NetworkHandler;
++import com.anatawa12.fixRtm.network.PacketEntityLoaded;
+ import jp.ngt.ngtlib.math.NGTMath;
+ import jp.ngt.ngtlib.math.PooledVec3;
+ import jp.ngt.ngtlib.math.Vec3;
+ import jp.ngt.ngtlib.protection.Lockable;
+ import jp.ngt.ngtlib.util.PermissionManager;
+@@ -126,11 +129,11 @@
              return BogieController.MotionState.FLY;
           } else {
              RailMap railmap = this.currentRailMap;
@@ -13,7 +25,7 @@
                 int i1 = k < 0 ? 0 : k;
                 int j1 = l > this.split ? this.split : l;
                 double[] adouble = frontBogie.getPosBuf();
-@@ -171,11 +171,11 @@
+@@ -171,11 +174,11 @@
                 this.rotationBuf[0] = f2;
                 this.rotationBuf[1] = f3;
                 this.rotationBuf[2] = f1;
@@ -26,7 +38,7 @@
                    }
                 }
  
-@@ -196,18 +196,20 @@
+@@ -196,18 +199,20 @@
        TileEntityLargeRailCore tileentitylargerailcore = this.getRail(px, py, pz);
        if (tileentitylargerailcore == null) {
           return false;
@@ -50,7 +62,7 @@
              this.onChangeRail(tileentitylargerailcore);
           }
  
-@@ -227,14 +229,17 @@
+@@ -227,14 +232,17 @@
        return null;
     }
  
@@ -72,7 +84,7 @@
     }
  
     protected boolean reverseJointArray() {
-@@ -245,13 +250,13 @@
+@@ -245,13 +253,13 @@
  
     protected void playJointSound() {
        EntityTrainBase entitytrainbase = this.getTrain();
@@ -88,7 +100,7 @@
              int j = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
              ++this.jointIndex;
              int k = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
-@@ -287,14 +292,23 @@
+@@ -287,14 +295,23 @@
  
     public final void onUpdate() {
        if (!this.world.isRemote && !this.tracked) {
@@ -112,7 +124,7 @@
     }
  
     public void onBogieUpdate() {
-@@ -309,11 +323,11 @@
+@@ -309,11 +326,11 @@
  
     }
  
@@ -125,7 +137,7 @@
  
     }
  
-@@ -491,10 +505,14 @@
+@@ -491,10 +508,14 @@
     public void addVelocity(double par1, double par3, double par5) {
     }
  
@@ -140,7 +152,7 @@
           }
        } else if (player.inventory.getCurrentItem() != null && player.inventory.getCurrentItem().getItem() == RTMItem.paddle) {
           return true;
-@@ -578,6 +596,18 @@
+@@ -578,6 +599,25 @@
     }
  
     public int getProhibitedAction() {
@@ -158,4 +170,11 @@
 +        super.addEntityCrashInfo(category);
 +        com.anatawa12.fixRtm.rtm.entity.train.EntityBogieKt.addEntityCrashInfo(this, category);
 +    }
++
++   @Override
++   public void onAddedToWorld() {
++      super.onAddedToWorld();
++
++      if (world.isRemote) NetworkHandler.sendPacketServer(new PacketEntityLoaded(getEntityId()));
++   }
  }
