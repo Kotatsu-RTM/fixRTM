@@ -65,9 +65,13 @@
        if (this.world != null && this.world.isRemote) {
           this.updateResourceState();
        }
- 
+-
     }
-@@ -138,26 +155,30 @@
+ 
+    public boolean shouldRenderInPass(int pass) {
+       return pass >= 0;
+    }
+@@ -138,10 +154,14 @@
  
     public void syncData() {
        this.updateResourceState();
@@ -82,7 +86,19 @@
     }
  
     public void setDead() {
-@@ -268,11 +289,10 @@
+@@ -153,11 +173,10 @@
+             }
+          }
+ 
+          RTMCore.NETWORK_WRAPPER.sendToAll(new PacketVehicleMovement(this, true));
+       }
+-
+    }
+ 
+    public final void onUpdate() {
+       this.onVehicleUpdate();
+    }
+@@ -268,11 +287,10 @@
  
        try {
           ModelSetBase modelsetbase = this.getResourceState().getResourceSet();
@@ -94,7 +110,7 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
-@@ -371,25 +391,25 @@
+@@ -371,25 +389,25 @@
     @SideOnly(Side.CLIENT)
     protected void updateAnimation() {
        ModelSetVehicleBase modelsetvehiclebase = this.getResourceState().getResourceSet();
@@ -123,7 +139,7 @@
        } else {
           int[] aint = this.getPantographMaxHeight();
           if (this.pantograph_F > aint[0]) {
-@@ -417,28 +437,28 @@
+@@ -417,28 +435,28 @@
        this.rollsignV = par1 * 16;
     }
  
@@ -155,7 +171,7 @@
  
           --move;
        }
-@@ -449,30 +469,41 @@
+@@ -449,30 +467,41 @@
     public float getMoveDir() {
        return 1.0F;
     }
@@ -199,7 +215,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +563,40 @@
+@@ -532,21 +561,40 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }

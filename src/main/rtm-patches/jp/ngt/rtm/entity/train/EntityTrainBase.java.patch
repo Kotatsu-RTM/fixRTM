@@ -25,7 +25,7 @@
  import net.minecraft.entity.player.EntityPlayer;
  import net.minecraft.item.ItemStack;
  import net.minecraft.nbt.NBTTagCompound;
-@@ -42,41 +41,35 @@
+@@ -42,41 +41,36 @@
  import net.minecraft.network.datasync.EntityDataManager;
  import net.minecraft.util.DamageSource;
  import net.minecraft.util.EnumHand;
@@ -63,6 +63,7 @@
 -   private int prevChunkCoordX;
 -   private int prevChunkCoordZ;
  
++   private NBTTagCompound waitingFormationData;
 +   private boolean autoLinkingState;
 +
     public EntityTrainBase(World world) {
@@ -70,7 +71,7 @@
        this.setSize(2.75F, 1.1875F);
        this.noClip = true;
     }
-@@ -92,10 +85,11 @@
+@@ -92,17 +86,24 @@
  
     protected void entityInit() {
        super.entityInit();
@@ -81,9 +82,47 @@
  
     protected void writeEntityToNBT(NBTTagCompound nbt) {
        super.writeEntityToNBT(nbt);
-       NBTTagCompound nbttagcompound = new NBTTagCompound();
-@@ -126,12 +120,15 @@
-    private void readFormationData(NBTTagCompound nbt) {
+-      NBTTagCompound nbttagcompound = new NBTTagCompound();
+-      this.writeFormationData(nbttagcompound);
+-      nbt.setTag("FormationEntry", nbttagcompound);
++
++      if (waitingFormationData == null) {
++         NBTTagCompound nbttagcompound = new NBTTagCompound();
++         this.writeFormationData(nbttagcompound);
++         nbt.setTag("FormationEntry", nbttagcompound);
++      } else {
++         nbt.setTag("FormationEntry", waitingFormationData);
++      }
++
+       nbt.setInteger("trainDir", this.getTrainDirection());
+    }
+ 
+    private void writeFormationData(NBTTagCompound nbt) {
+       if (this.formation != null) {
+@@ -110,33 +111,41 @@
+          if (formationentry != null) {
+             nbt.setLong("FormationId", this.formation.id);
+             nbt.setByte("EntryPos", formationentry.entryId);
+             nbt.setByte("EntryDir", formationentry.dir);
+          }
+-
+       }
+    }
+ 
+    protected void readEntityFromNBT(NBTTagCompound nbt) {
+       super.readEntityFromNBT(nbt);
+       NBTTagCompound nbttagcompound = nbt.getCompoundTag("FormationEntry");
+       this.readFormationData(nbttagcompound);
+       this.setTrainDirection(nbt.getInteger("trainDir"));
+    }
+ 
+-   private void readFormationData(NBTTagCompound nbt) {
++   private boolean readFormationData(NBTTagCompound nbt) {
++      if (!FormationManager.getInstance().isLoaded()) {
++         waitingFormationData = nbt;
++         return false;
++      }
++
        long i = nbt.getLong("FormationId");
        byte b0 = nbt.getByte("EntryPos");
        byte b1 = nbt.getByte("EntryDir");
@@ -99,7 +138,13 @@
           formation.setTrain(this, b0, b1);
        }
  
-@@ -150,11 +147,11 @@
++      return true;
+    }
+ 
+    public Entity[] getParts() {
+       return null;
+    }
+@@ -150,11 +159,11 @@
     }
  
     public void setDead() {
@@ -112,7 +157,20 @@
           try {
              this.formation.onRemovedTrain(this);
           } catch (IndexOutOfBoundsException indexoutofboundsexception) {
-@@ -172,12 +169,13 @@
+@@ -163,21 +172,26 @@
+       }
+ 
+    }
+ 
+    public void onVehicleUpdate() {
++      if (waitingFormationData != null && readFormationData(waitingFormationData)) {
++         waitingFormationData = null;
++      }
++
+       this.updateSpeed();
+       if (this.existBogies()) {
+          this.bogieController.updateBogies(this);
+       }
  
        super.onVehicleUpdate();
        if (this.world.isRemote) {
@@ -127,7 +185,7 @@
     }
  
     protected void updateFallState() {
-@@ -293,25 +291,25 @@
+@@ -293,25 +307,25 @@
           float f = this.getSpeed();
           int i = this.getNotch();
           Random random = this.world.rand;
@@ -157,7 +215,7 @@
                 double d6 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 double d7 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 this.world.spawnParticle(enumparticletypes, d2, d3, d4, d6, 0.25D, d7, new int[0]);
-@@ -441,25 +439,34 @@
+@@ -441,25 +455,34 @@
              }
           }
  
@@ -195,7 +253,7 @@
              this.setSpeed(f);
           }
  
-@@ -565,11 +572,11 @@
+@@ -565,11 +588,11 @@
  
           return true;
        }
@@ -208,7 +266,7 @@
           if (this.getConnectedTrain(i) == null) {
              bogie.isActivated = true;
              NGTLog.sendChatMessage(player, "message.train.concatenation_mode", new Object[0]);
-@@ -655,11 +662,11 @@
+@@ -655,11 +678,11 @@
        if (!this.world.isRemote && par2.getTrain() != null) {
           int i = par1.getBogieId();
           int j = par2.getBogieId();
@@ -221,7 +279,7 @@
                 entityplayer = (EntityPlayer)this.getFirstPassenger();
              } else if (par2.getTrain().getFirstPassenger() instanceof EntityPlayer) {
                 entityplayer = (EntityPlayer)par2.getTrain().getFirstPassenger();
-@@ -672,38 +679,38 @@
+@@ -672,38 +695,38 @@
        }
  
     }
@@ -265,7 +323,7 @@
     public boolean existBogies() {
        return this.getBogie(0) != null && this.getBogie(1) != null;
     }
-@@ -760,10 +767,11 @@
+@@ -760,10 +783,11 @@
     public int getTrainDirection() {
        return this.getVehicleState(TrainState.TrainStateType.Direction);
     }
@@ -277,7 +335,7 @@
        } else {
           this.formation.setTrainDirection((byte)par1, this);
        }
-@@ -793,33 +801,46 @@
+@@ -793,33 +817,46 @@
     public boolean addNotch(Entity driver, int par2) {
        if (par2 != 0) {
           int i = this.getNotch();
@@ -329,7 +387,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +895,31 @@
+@@ -874,81 +911,31 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
@@ -356,14 +414,9 @@
 -         ForgeChunkManager.releaseTicket(this.ticket);
 -         this.ticket = null;
 -      }
-+   public boolean getAutoLinkingState() {
-+      return autoLinkingState;
-+   }
- 
-+   public void setAutoLinkingState(boolean state) {
-+      autoLinkingState = state;
-    }
- 
+-
+-   }
+-
 -   private boolean requestTicket() {
 -      Ticket ticket = RTMChunkManager.INSTANCE.getNewTicket(this.world, Type.ENTITY);
 -      if (ticket != null) {
@@ -377,25 +430,24 @@
 -         NGTLog.debug("[RTM] Failed to get ticket (Chunk Loader)");
 -         return false;
 -      }
--   }
-+   private void updateAutoLinkingState() {
-+      if (!autoLinkingState) return;
++   public boolean getAutoLinkingState() {
++      return autoLinkingState;
+    }
  
 -   public void setChunkTicket(Ticket par1) {
 -      if (this.ticket != par1) {
 -         ForgeChunkManager.releaseTicket(this.ticket);
-+      if (getNotch() != 1) {
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-+         return;
-       }
- 
+-      }
+-
 -      this.ticket = par1;
 -   }
 -
 -   public void forceChunkLoading() {
 -      this.forceChunkLoading(this.chunkCoordX, this.chunkCoordZ);
--   }
--
++   public void setAutoLinkingState(boolean state) {
++      autoLinkingState = state;
+    }
+ 
 -   public void forceChunkLoading(int x, int z) {
 -      if (!this.world.isRemote) {
 -         if (this.ticket == null && !this.requestTicket()) {
@@ -405,22 +457,28 @@
 -         if (x != this.prevChunkCoordX || z != this.prevChunkCoordZ) {
 -            this.setupChunks(x, z);
 -         }
--
++   private void updateAutoLinkingState() {
++      if (!autoLinkingState) return;
+ 
 -         for(ChunkPos chunkpos : this.loadedChunks) {
 -            ForgeChunkManager.forceChunk(this.ticket, chunkpos);
 -         }
 -
 -         ChunkPos chunkpos1 = new ChunkPos(x, z);
 -         ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
++      if (getNotch() != 1) {
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++         return;
+       }
+ 
 +      if (getSpeed() > 15.0F / 72) {
 +         setNotch(0);
 +         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-       }
--
--   }
++      }
+    }
 -
 -   private void setupChunks(int xChunk, int zChunk) {
 -      int i = this.getVehicleState(TrainState.TrainStateType.ChunkLoader);
 -      RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
-    }
+-   }
  }
