@@ -174,7 +174,7 @@ object FixRtm {
         if (event.target !is EntityBogie) return
 
         val target = event.target as EntityBogie
-        val train = target.train
+        val train = target.train ?: return
 
         train.trainDirection = target.bogieId.toInt()
         train.setVehicleState(TrainState.TrainStateType.Role, 0)
