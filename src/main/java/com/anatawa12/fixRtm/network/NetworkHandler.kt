@@ -20,6 +20,7 @@ object NetworkHandler {
         registerMessage(SentAllModels, SentAllModels::class.java, 0x01, Side.CLIENT)
         registerMessage(NotifyUntracked, NotifyUntracked::class.java, 0x02, Side.SERVER)
         registerMessage(RequestFormation, RequestFormation::class.java, 0x03, Side.SERVER)
+        registerMessage(PacketEntityLoaded, PacketEntityLoaded::class.java, 0x04, Side.SERVER)
     }
 
     @JvmStatic
