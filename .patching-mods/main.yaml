@@ -95,6 +95,7 @@ mods:
       - jp.ngt.rtm.entity.train.util.BogieController
       - jp.ngt.rtm.entity.train.util.EnumNotch
       - jp.ngt.rtm.entity.train.util.Formation
+      - jp.ngt.rtm.entity.train.util.FormationManager
       - jp.ngt.rtm.entity.train.util.TrainState
       - jp.ngt.rtm.entity.vehicle.EntityTrolley
       - jp.ngt.rtm.entity.vehicle.EntityVehicleBase

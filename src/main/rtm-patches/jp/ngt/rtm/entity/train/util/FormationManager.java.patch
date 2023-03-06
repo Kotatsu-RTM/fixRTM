@@ -1,0 +1,49 @@
+--- a/jp/ngt/rtm/entity/train/util/FormationManager.java
++++ b/jp/ngt/rtm/entity/train/util/FormationManager.java
+@@ -10,10 +10,11 @@
+ public final class FormationManager {
+    private static final String SAVE_NAME = "rtm_formations";
+    private final boolean isRemote;
+    private FormationData saveData;
+    private final Map<Long, Formation> formationMap = new HashMap<>();
++   private boolean isLoaded = false;
+ 
+    public FormationManager(boolean par1) {
+       this.isRemote = par1;
+    }
+ 
+@@ -21,19 +22,20 @@
+       return RTMCore.proxy.getFormationManager();
+    }
+ 
+    public void loadData(World world) {
+       if (world instanceof WorldServer && world.provider.getDimension() == 0) {
+-         FormationData formationdata = (FormationData)world.loadData(FormationData.class, "rtm_formations");
++         FormationData formationdata = (FormationData)world.loadData(FormationData.class, SAVE_NAME);
+          if (formationdata == null) {
+-            formationdata = new FormationData("rtm_formations");
+-            world.setData("rtm_formations", formationdata);
++            formationdata = new FormationData(SAVE_NAME);
++            world.setData(SAVE_NAME, formationdata);
+          }
+ 
+          this.saveData = formationdata;
+       }
+ 
++      isLoaded = true;
+    }
+ 
+    public Map<Long, Formation> getFormations() {
+       return this.formationMap;
+    }
+@@ -66,6 +68,10 @@
+       long i = this.getNewFormationId();
+       Formation formation = new Formation(i, 1);
+       formation.setTrain(par1, 0, 0);
+       return formation;
+    }
++
++   public boolean isLoaded() {
++      return isLoaded;
++   }
+ }
