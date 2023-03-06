@@ -215,7 +215,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +561,40 @@
+@@ -532,21 +561,43 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
@@ -228,6 +228,9 @@
     public void setVehicleState(TrainState.TrainStateType type, byte data) {
 -      this.getResourceState().getDataMap().setInt(type.toString(), data, 3);
 +      this.getResourceState().getDataMap().setInt(type.toString(), type.clap(data, this), 3);
++      if (type == TrainState.TrainStateType.Direction && data != getVehicleState(TrainState.TrainStateType.Direction)) {
++         setSpeed(-getSpeed());
++      }
     }
  
     @SideOnly(Side.CLIENT)
