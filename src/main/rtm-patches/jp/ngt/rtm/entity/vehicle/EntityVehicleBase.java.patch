@@ -16,11 +16,17 @@
  import jp.ngt.ngtlib.math.PooledVec3;
  import jp.ngt.ngtlib.math.Vec3;
  import jp.ngt.ngtlib.network.PacketNBT;
-@@ -26,21 +30,23 @@
+@@ -22,25 +26,29 @@
+ import jp.ngt.rtm.network.PacketSetTrainState;
+ import jp.ngt.rtm.network.PacketVehicleMovement;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.entity.EntityLivingBase;
  import net.minecraft.entity.MoverType;
++import net.minecraft.entity.player.EntityPlayer;
  import net.minecraft.nbt.NBTTagCompound;
  import net.minecraft.util.math.AxisAlignedBB;
  import net.minecraft.util.math.BlockPos;
++import net.minecraft.util.math.MathHelper;
  import net.minecraft.world.World;
 +import net.minecraft.world.WorldServer;
  import net.minecraftforge.fml.relauncher.Side;
@@ -41,7 +47,7 @@
     private boolean tracked;
     private EntityLivingBase rider;
     public float rotationRoll;
-@@ -100,18 +106,28 @@
+@@ -100,18 +108,28 @@
     protected void entityInit() {
     }
  
@@ -71,7 +77,7 @@
     public boolean shouldRenderInPass(int pass) {
        return pass >= 0;
     }
-@@ -138,10 +154,14 @@
+@@ -138,10 +156,14 @@
  
     public void syncData() {
        this.updateResourceState();
@@ -86,7 +92,7 @@
     }
  
     public void setDead() {
-@@ -153,11 +173,10 @@
+@@ -153,11 +175,10 @@
              }
           }
  
@@ -98,7 +104,7 @@
     public final void onUpdate() {
        this.onVehicleUpdate();
     }
-@@ -268,11 +287,10 @@
+@@ -268,11 +289,10 @@
  
        try {
           ModelSetBase modelsetbase = this.getResourceState().getResourceSet();
@@ -110,7 +116,49 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
-@@ -371,25 +389,25 @@
+@@ -310,23 +330,29 @@
+ 
+       return y;
+    }
+ 
+    public void updatePassenger(Entity passenger) {
+-      if (this.isPassenger(passenger)) {
+-         Vec3 vec3 = this.getRiderPos(passenger);
+-         vec3 = vec3.rotateAroundZ(-this.rotationRoll);
+-         vec3 = vec3.rotateAroundX(this.rotationPitch);
+-         vec3 = vec3.rotateAroundY(this.rotationYaw);
+-         double d0 = this.posX + vec3.getX();
+-         double d1 = this.posY + vec3.getY();
+-         double d2 = this.posZ + vec3.getZ();
+-         passenger.setPosition(d0, d1, d2);
+-         passenger.rotationYaw -= NGTMath.wrapAngle(this.rotationYaw - this.prevRotationYaw);
+-         passenger.rotationPitch -= NGTMath.wrapAngle(this.rotationPitch - this.prevRotationPitch);
+-      }
++      if (!this.isPassenger(passenger) || !(passenger instanceof EntityPlayer)) return;
++
++      EntityPlayer player = ((EntityPlayer) passenger);
++
++      Vec3 vec3 = this.getRiderPos(player);
++      vec3 = vec3.rotateAroundZ(-this.rotationRoll);
++      vec3 = vec3.rotateAroundX(this.rotationPitch);
++      vec3 = vec3.rotateAroundY(this.rotationYaw);
++      double d0 = this.posX + vec3.getX();
++      double d1 = this.posY + vec3.getY();
++      double d2 = this.posZ + vec3.getZ();
++      player.setPosition(d0, d1, d2);
+ 
++      float yaw = MathHelper.wrapDegrees(this.rotationYaw - this.prevRotationYaw);
++      float pitch = MathHelper.wrapDegrees(this.rotationPitch - this.prevRotationPitch);
++
++      player.renderYawOffset -= yaw;
++      player.rotationYaw -= yaw;
++      player.rotationPitch -= pitch;
+    }
+ 
+    public Vec3 getRiderPos(Entity passenger) {
+       float[] afloat = this.getResourceState().getResourceSet().getConfig().getPlayerPos()[this.getRiderPosIndex()];
+       return PooledVec3.create((double)afloat[0], (double)afloat[1] + passenger.getYOffset(), (double)afloat[2]);
+@@ -371,25 +397,25 @@
     @SideOnly(Side.CLIENT)
     protected void updateAnimation() {
        ModelSetVehicleBase modelsetvehiclebase = this.getResourceState().getResourceSet();
@@ -139,7 +187,7 @@
        } else {
           int[] aint = this.getPantographMaxHeight();
           if (this.pantograph_F > aint[0]) {
-@@ -417,28 +435,28 @@
+@@ -417,28 +443,28 @@
        this.rollsignV = par1 * 16;
     }
  
@@ -171,7 +219,7 @@
  
           --move;
        }
-@@ -449,30 +467,41 @@
+@@ -449,30 +475,41 @@
     public float getMoveDir() {
        return 1.0F;
     }
@@ -215,7 +263,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +561,43 @@
+@@ -532,21 +569,43 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
