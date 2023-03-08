@@ -1,0 +1,59 @@
+--- a/jp/ngt/rtm/gui/DataMapEditor.java
++++ b/jp/ngt/rtm/gui/DataMapEditor.java
+@@ -22,29 +22,38 @@
+ import jp.ngt.ngtlib.util.NGTUtilClient;
+ import jp.ngt.rtm.modelpack.state.DataEntry;
+ import jp.ngt.rtm.modelpack.state.DataFormatter;
+ import jp.ngt.rtm.modelpack.state.IDataFilter;
+ import jp.ngt.rtm.modelpack.state.ResourceState;
++import net.minecraft.client.Minecraft;
++import org.lwjgl.opengl.Display;
+ 
+ public class DataMapEditor extends JFrame {
+    private static final int DATA_COL = 2;
+    private final GuiSelectModel parentGui;
+    private final Map<String, IDataFilter> filterMap = new HashMap<>();
+ 
+    public DataMapEditor(GuiSelectModel gui) {
+       this.parentGui = gui;
+       this.init();
++      this.setAlwaysOnTop(true);
+       this.setVisible(true);
+    }
+ 
+    private void init() {
+-      int i = NGTUtilClient.getMinecraft().displayHeight / 720;
+-      i = i <= 0 ? 1 : i;
+-      int j = 16 * i;
+-      Font font = new Font("Arial", 0, j);
++      Minecraft minecraft = Minecraft.getMinecraft();
++
++      int windowWidth = 480;
++      int windowHeight = 640;
++      int fontSize = 16;
++
++      int windowPosX = Display.getX() + (minecraft.displayWidth / 2) - (windowWidth / 2);
++      int windowPosY = Display.getY() + (minecraft.displayHeight / 2) - (windowHeight / 2);
++
++      Font font = new Font("Arial", 0, fontSize);
+       this.setDefaultCloseOperation(2);
+-      this.setBounds(32, 32, 480 * i, 640 * i);
++      this.setBounds(windowPosX, windowPosY, windowWidth, windowHeight);
+       this.setTitle("DataMap Editor");
+       ResourceState resourcestate = this.parentGui.selector.getResourceState();
+       Map<String, DataEntry> map = new TreeMap<>();
+       map.putAll(resourcestate.dataMap.getEntries());
+       String[][] astring = new String[map.size()][3];
+@@ -57,11 +66,11 @@
+             this.filterMap.put(entry.getKey(), idatafilter);
+          }
+       }
+ 
+       String[] astring1 = new String[]{"Key", "Type", "Data"};
+-      JTable jtable = new DataMapEditor.DMEditorTable(font, j, astring, astring1);
++      JTable jtable = new DataMapEditor.DMEditorTable(font, fontSize, astring, astring1);
+       JScrollPane jscrollpane = new JScrollPane(jtable);
+       this.getContentPane().add(jscrollpane, "Center");
+       JPanel jpanel = new JPanel();
+       jpanel.setLayout(new FlowLayout());
+       JButton jbutton = new JButton("OK");

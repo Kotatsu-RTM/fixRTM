@@ -1,0 +1,81 @@
+--- a/jp/ngt/rtm/gui/GuiSelectModel.java
++++ b/jp/ngt/rtm/gui/GuiSelectModel.java
+@@ -1,15 +1,7 @@
+ package jp.ngt.rtm.gui;
+ 
+-import java.awt.Color;
+-import java.io.IOException;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collections;
+-import java.util.List;
+-import javax.swing.JColorChooser;
+-import javax.swing.JFrame;
+ import jp.ngt.ngtlib.gui.GuiButtonCustom;
+ import jp.ngt.ngtlib.gui.GuiScreenCustom;
+ import jp.ngt.ngtlib.math.NGTMath;
+ import jp.ngt.ngtlib.renderer.NGTTessellator;
+ import jp.ngt.rtm.RTMCore;
+@@ -18,20 +10,30 @@
+ import jp.ngt.rtm.modelpack.cfg.IConfigWithType;
+ import jp.ngt.rtm.modelpack.modelset.ModelSetBase;
+ import jp.ngt.rtm.modelpack.modelset.ResourceSet;
+ import jp.ngt.rtm.modelpack.state.ResourceState;
+ import jp.ngt.rtm.network.PacketSelectResource;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.GuiButton;
+ import net.minecraft.client.gui.GuiScreen;
+ import net.minecraft.client.gui.GuiTextField;
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.world.World;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ import org.lwjgl.input.Mouse;
++import org.lwjgl.opengl.Display;
+ import org.lwjgl.opengl.GL11;
+ 
++import javax.swing.*;
++import java.awt.*;
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++
+ @SideOnly(Side.CLIENT)
+ public class GuiSelectModel extends GuiScreenCustom {
+    public static final ResourceLocation ButtonBlue = new ResourceLocation("rtm", "textures/gui/button_blue.png");
+    public final IResourceSelector selector;
+    private List<ResourceSet> modelListAll;
+@@ -250,21 +252,30 @@
+       }
+ 
+    }
+ 
+    private void openColorChooser() {
++      Minecraft minecraft = Minecraft.getMinecraft();
++
++      int windowWidth = 650;
++      int windowHeight = 400;
++
++      int windowPosX = Display.getX() + (minecraft.displayWidth / 2) - (windowWidth / 2);
++      int windowPosY = Display.getY() + (minecraft.displayHeight / 2) - (windowHeight / 2);
++
+       JFrame jframe = new JFrame();
+       jframe.setDefaultCloseOperation(2);
+-      jframe.setBounds(20, 20, 450, 400);
++      jframe.setBounds(windowPosX, windowPosY, windowWidth, windowHeight);
+       jframe.setTitle("Select Color");
+       JColorChooser jcolorchooser = new JColorChooser(new Color(this.modelColor));
+       jcolorchooser.getSelectionModel().addChangeListener((event) -> {
+          int i = jcolorchooser.getColor().getRGB() & 16777215;
+          this.setColorToButton(i);
+          this.resetColor();
+       });
+       jframe.getContentPane().add(jcolorchooser, "Center");
++      jframe.setAlwaysOnTop(true);
+       jframe.setVisible(true);
+    }
+ 
+    private void openDataMapEditor() {
+       new DataMapEditor(this);

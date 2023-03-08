@@ -106,8 +106,10 @@ mods:
       - jp.ngt.rtm.event.RTMEventHandler
       - jp.ngt.rtm.event.RTMKeyHandlerClient
       - jp.ngt.rtm.event.RTMKeyHandlerServer
+      - jp.ngt.rtm.gui.DataMapEditor
       - jp.ngt.rtm.gui.GuiIngameCustom
       - jp.ngt.rtm.gui.GuiRailMarker
+      - jp.ngt.rtm.gui.GuiSelectModel
       - jp.ngt.rtm.gui.GuiSignalConverter
       - jp.ngt.rtm.gui.GuiVehicleControlPanel
       - jp.ngt.rtm.gui.RTMGuiHandler
