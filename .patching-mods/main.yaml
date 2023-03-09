@@ -127,6 +127,7 @@ mods:
       - jp.ngt.rtm.modelpack.cfg.TrainConfig
       - jp.ngt.rtm.modelpack.cfg.VehicleBaseConfig
       - jp.ngt.rtm.modelpack.init.MPLAdButton
+      - jp.ngt.rtm.modelpack.init.MPLFrame
       - jp.ngt.rtm.modelpack.init.ModelPackConstructThread
       - jp.ngt.rtm.modelpack.init.ModelPackLoadThread
       - jp.ngt.rtm.modelpack.modelset.ModelSetBase
