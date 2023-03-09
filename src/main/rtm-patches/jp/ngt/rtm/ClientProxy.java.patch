@@ -1,5 +1,44 @@
 --- a/jp/ngt/rtm/ClientProxy.java
 +++ b/jp/ngt/rtm/ClientProxy.java
+@@ -2,10 +2,12 @@
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.List;
++
++import com.anatawa12.fixRtm.rtm.modelpack.init.ClientModelPackLoader;
+ import jp.ngt.ngtlib.io.NGTFileLoader;
+ import jp.ngt.ngtlib.io.NGTJson;
+ import jp.ngt.ngtlib.io.NGTLog;
+ import jp.ngt.ngtlib.io.NGTText;
+ import jp.ngt.ngtlib.item.ItemRenderHandler;
+@@ -27,11 +29,10 @@
+ import jp.ngt.rtm.entity.vehicle.IUpdateVehicle;
+ import jp.ngt.rtm.event.RTMEventHandlerClient;
+ import jp.ngt.rtm.event.RTMKeyHandlerClient;
+ import jp.ngt.rtm.event.RTMTickHandlerClient;
+ import jp.ngt.rtm.gui.camera.Camera;
+-import jp.ngt.rtm.modelpack.init.ModelPackLoadThread;
+ import jp.ngt.rtm.modelpack.model.ModelMissing;
+ import jp.ngt.rtm.modelpack.modelset.ModelSetFirearm;
+ import jp.ngt.rtm.rail.TileEntityLargeRailCore;
+ import jp.ngt.rtm.sound.MovingSoundMaker;
+ import jp.ngt.rtm.sound.SoundUpdaterTrain;
+@@ -87,12 +88,11 @@
+          VersionChecker.addToCheckList(new PackInfo(RTMCore.metadata.name, RTMCore.metadata.url, RTMCore.metadata.updateUrl, RTMCore.metadata.version));
+       }
+    }
+ 
+    public void init() {
+-      ModelPackLoadThread modelpackloadthread = new ModelPackLoadThread(Side.CLIENT);
+-      modelpackloadthread.start();
++      ClientModelPackLoader.INSTANCE.load();
+       MinecraftForge.EVENT_BUS.register(RTMKeyHandlerClient.INSTANCE);
+       MinecraftForge.EVENT_BUS.register(new RTMTickHandlerClient());
+       RTMBlock.initClient2();
+       RTMItem.initClient2();
+       ItemRenderHandler.INSTANCE.register(RTMItem.decoration_block, new RenderDecoration());
 @@ -211,10 +211,11 @@
     }
  
