@@ -25,7 +25,7 @@
  import jp.ngt.rtm.rail.TileEntityLargeRailCore;
  import jp.ngt.rtm.sound.MovingSoundMaker;
  import jp.ngt.rtm.sound.SoundUpdaterTrain;
-@@ -87,12 +88,11 @@
+@@ -87,12 +88,10 @@
           VersionChecker.addToCheckList(new PackInfo(RTMCore.metadata.name, RTMCore.metadata.url, RTMCore.metadata.updateUrl, RTMCore.metadata.version));
        }
     }
@@ -33,13 +33,12 @@
     public void init() {
 -      ModelPackLoadThread modelpackloadthread = new ModelPackLoadThread(Side.CLIENT);
 -      modelpackloadthread.start();
-+      ClientModelPackLoader.INSTANCE.load();
        MinecraftForge.EVENT_BUS.register(RTMKeyHandlerClient.INSTANCE);
        MinecraftForge.EVENT_BUS.register(new RTMTickHandlerClient());
        RTMBlock.initClient2();
        RTMItem.initClient2();
        ItemRenderHandler.INSTANCE.register(RTMItem.decoration_block, new RenderDecoration());
-@@ -211,10 +211,11 @@
+@@ -211,10 +210,11 @@
     }
  
     public static void playSound(MovingSoundCustom sound, float vol, float pitch) {

@@ -11,6 +11,7 @@ import com.anatawa12.fixRtm.crash.RTMSmallModelPackInfoCrashCallable
 import com.anatawa12.fixRtm.gui.GuiHandler
 import com.anatawa12.fixRtm.io.FIXFileLoader
 import com.anatawa12.fixRtm.network.NetworkHandler
+import com.anatawa12.fixRtm.rtm.modelpack.init.ClientModelPackLoader
 import com.anatawa12.fixRtm.rtm.modelpack.modelset.dummies.*
 import com.anatawa12.fixRtm.scripting.loadFIXScriptUtil
 import com.anatawa12.fixRtm.scripting.nashorn.CompiledImportedScriptCache
@@ -43,6 +44,7 @@ import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.ModMetadata
 import net.minecraftforge.fml.common.event.FMLConstructionEvent
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.PlayerEvent
@@ -126,6 +128,11 @@ object FixRtm {
             SoundSystemConfig.setNumberNormalChannels(1024)
             SoundSystemConfig.setNumberStreamingChannels(32)
         }
+    }
+
+    @Mod.EventHandler
+    fun postInit(event: FMLPostInitializationEvent) {
+        if (event.side.isClient) ClientModelPackLoader.load()
     }
 
     private val thrownMarker = CrashReport("", Throwable())
