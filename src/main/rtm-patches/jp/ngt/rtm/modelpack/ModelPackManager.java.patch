@@ -1,6 +1,23 @@
 --- a/jp/ngt/rtm/modelpack/ModelPackManager.java
 +++ b/jp/ngt/rtm/modelpack/ModelPackManager.java
-@@ -46,19 +46,21 @@
+@@ -1,15 +1,11 @@
+ package jp.ngt.rtm.modelpack;
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.lang.reflect.Constructor;
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
++import java.util.*;
+ import java.util.Map.Entry;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ import jp.ngt.ngtlib.io.FileType;
+ import jp.ngt.ngtlib.io.NGTFileLoader;
+@@ -46,19 +42,21 @@
  public final class ModelPackManager {
     public static final ModelPackManager INSTANCE = new ModelPackManager();
     private static final Pattern SC_INCLUDE = Pattern.compile("//include <(.+)>");
@@ -14,7 +31,7 @@
 +   public final Map<ResourceType, Map<String, ResourceSet>> smpModelSetMap = new HashMap<>(256);
 +   public final Map<String, ResourceSet> dummyMap = new HashMap<>(32);
 +   public final java.util.concurrent.locks.ReadWriteLock modelSetMapLock = new java.util.concurrent.locks.ReentrantReadWriteLock();
-+   public final com.anatawa12.fixRtm.rtm.modelpack.init.UnconstructSetsQueue unconstructSets = new com.anatawa12.fixRtm.rtm.modelpack.init.UnconstructSetsQueue();
++   public final Set<ResourceSet<?>> unconstructSets = new HashSet<>();
     private final Map<String, IModelNGT> modelCache = new HashMap<>(128);
     private final Map<String, Map<String, ResourceLocation>> resourceCache = new HashMap<>(256);
     private final Map<String, String> scriptCache = new HashMap<>(64);
@@ -26,7 +43,7 @@
     private ModelPackManager() {
     }
  
-@@ -114,10 +116,11 @@
+@@ -114,10 +112,11 @@
        for(File file2 : list2) {
           ++i;
           String s1 = file2.getName();
@@ -38,7 +55,7 @@
  
        TimeTableManager.INSTANCE.load();
        par1.loadFinished = true;
-@@ -143,29 +146,32 @@
+@@ -143,29 +142,32 @@
     public ResourceType getType(String name) {
        return this.typeMap.get(name);
     }
@@ -82,7 +99,7 @@
           return cfg.getName();
        } else {
           throw new ModelPackException("Failed to create ResourceSet", cfg.getName());
-@@ -177,15 +183,16 @@
+@@ -177,15 +179,16 @@
  
        for(Entry<ResourceType, Map<String, ResourceSet>> entry : this.allModelSetMap.entrySet()) {
           for(ResourceSet resourceset : entry.getValue().values()) {
@@ -100,7 +117,7 @@
     public void addModelSetName(int count, String typeName, String name) {
        assert NGTUtil.isSMP() && !NGTUtil.isServer();
  
-@@ -227,16 +234,13 @@
+@@ -227,16 +230,13 @@
           resourcetype = type.parent;
        }
  
