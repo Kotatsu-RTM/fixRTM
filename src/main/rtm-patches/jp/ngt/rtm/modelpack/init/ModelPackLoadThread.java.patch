@@ -1,6 +1,64 @@
 --- a/jp/ngt/rtm/modelpack/init/ModelPackLoadThread.java
 +++ b/jp/ngt/rtm/modelpack/init/ModelPackLoadThread.java
-@@ -97,17 +97,19 @@
+@@ -33,38 +33,34 @@
+       this.threadSide = par1;
+       this.displayWindow = par1 == Side.CLIENT && !GraphicsEnvironment.isHeadless();
+       if (this.displayWindow) {
+          this.initWindow();
+       }
+-
+    }
+ 
+    private void initWindow() {
+       int i = 2;
+       this.bars = new JProgressBar[i];
+       this.labels = new JLabel[i];
+       this.maxValue = new int[i];
+-      int j = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+-      int k = j / 1024;
+-      float f = 16.0F;
+-      this.mainFrame = new MPLFrame(k);
++      this.mainFrame = new MPLFrame(1);
+       JPanel jpanel = new JPanel();
+       jpanel.setLayout(new BoxLayout(jpanel, 1));
+       jpanel.setBackground(Color.BLACK);
+       JPanel jpanel1 = new JPanel();
+       jpanel1.setBackground(Color.BLACK);
+       jpanel1.setLayout(new BoxLayout(jpanel1, 0));
+-      this.adButton = new MPLAdButton(k);
+-      JButton jbutton = new MPLMoveButton(this.adButton, -1, k);
+-      JButton jbutton1 = new MPLMoveButton(this.adButton, 1, k);
++      this.adButton = new MPLAdButton(1);
++      JButton jbutton = new MPLMoveButton(this.adButton, -1, 1);
++      JButton jbutton1 = new MPLMoveButton(this.adButton, 1, 1);
+       jpanel1.add(jbutton);
+       jpanel1.add(this.adButton);
+       jpanel1.add(jbutton1);
+       jpanel.add(jpanel1);
+-      JPanel jpanel2 = new MPLBarPanel(this.labels[0] = new JLabel("Start Loading"), this.bars[0] = new JProgressBar(), k);
++      JPanel jpanel2 = new MPLBarPanel(this.labels[0] = new JLabel("Start Loading"), this.bars[0] = new JProgressBar(), 1);
+       jpanel.add(jpanel2);
+-      JPanel jpanel3 = new MPLBarPanel(this.labels[1] = new JLabel("Ready"), this.bars[1] = new JProgressBar(), k);
++      JPanel jpanel3 = new MPLBarPanel(this.labels[1] = new JLabel("Ready"), this.bars[1] = new JProgressBar(), 1);
+       jpanel.add(jpanel3);
+       this.mainFrame.getContentPane().add(jpanel);
+    }
+ 
+    public void run() {
+@@ -78,11 +74,11 @@
+ 
+             public void run() {
+                while(!ModelPackLoadThread.this.finished) {
+                   if (ModelPackLoadThread.this.displayWindow) {
+                      ++this.count;
+-                     if (this.count >= 30) {
++                     if (this.count >= 20) {
+                         ModelPackLoadThread.this.adButton.changeImage(1);
+                         this.count = 0;
+                      }
+                   }
+ 
+@@ -97,17 +93,19 @@
           };
           thread.start();
           this.runThread();
@@ -23,7 +81,7 @@
           if (this.displayWindow && !this.debug) {
              this.mainFrame.dispose();
           }
-@@ -131,19 +133,20 @@
+@@ -131,19 +129,20 @@
           }
        }
  
