@@ -16,7 +16,7 @@
  import jp.ngt.ngtlib.math.NGTMath;
  import jp.ngt.ngtlib.renderer.NGTTessellator;
  import jp.ngt.rtm.RTMCore;
-@@ -18,20 +10,30 @@
+@@ -18,22 +10,34 @@
  import jp.ngt.rtm.modelpack.cfg.IConfigWithType;
  import jp.ngt.rtm.modelpack.modelset.ModelSetBase;
  import jp.ngt.rtm.modelpack.modelset.ResourceSet;
@@ -44,10 +44,14 @@
 +
  @SideOnly(Side.CLIENT)
  public class GuiSelectModel extends GuiScreenCustom {
++   private static final int WINDOW_WIDTH = 650;
++   private static final int WINDOW_HEIGHT = 400;
     public static final ResourceLocation ButtonBlue = new ResourceLocation("rtm", "textures/gui/button_blue.png");
     public final IResourceSelector selector;
     private List<ResourceSet> modelListAll;
-@@ -250,21 +252,30 @@
+    private List<ResourceSet> modelListSelect;
+    private GuiButtonSelectModel[] selectButtons;
+@@ -250,21 +254,27 @@
        }
  
     }
@@ -55,16 +59,13 @@
     private void openColorChooser() {
 +      Minecraft minecraft = Minecraft.getMinecraft();
 +
-+      int windowWidth = 650;
-+      int windowHeight = 400;
-+
-+      int windowPosX = Display.getX() + (minecraft.displayWidth / 2) - (windowWidth / 2);
-+      int windowPosY = Display.getY() + (minecraft.displayHeight / 2) - (windowHeight / 2);
++      int windowPosX = Display.getX() + (minecraft.displayWidth / 2) - (WINDOW_WIDTH / 2);
++      int windowPosY = Display.getY() + (minecraft.displayHeight / 2) - (WINDOW_HEIGHT / 2);
 +
        JFrame jframe = new JFrame();
        jframe.setDefaultCloseOperation(2);
 -      jframe.setBounds(20, 20, 450, 400);
-+      jframe.setBounds(windowPosX, windowPosY, windowWidth, windowHeight);
++      jframe.setBounds(windowPosX, windowPosY, WINDOW_WIDTH, WINDOW_HEIGHT);
        jframe.setTitle("Select Color");
        JColorChooser jcolorchooser = new JColorChooser(new Color(this.modelColor));
        jcolorchooser.getSelectionModel().addChangeListener((event) -> {
