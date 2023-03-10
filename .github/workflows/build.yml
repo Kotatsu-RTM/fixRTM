@@ -1,13 +1,5 @@
-# Copyright (c) 2020 anatawa12 and other contributors
-# This file is part of fixRTM, released under GNU LGPL v3 with few exceptions
-# See LICENSE at https://github.com/fixrtm/fixRTM for more details
+name: Build
 
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   push:
     branches: [ master ]
@@ -15,59 +7,36 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
+    name: Build
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout codes
+        uses: actions/checkout@v3.3.0
 
-      - uses: actions/setup-java@v1
+      - name: Setup JDK 8
+        uses: actions/setup-java@v3.10.0
         with:
+          distribution: zulu
           java-version: 8
+          cache: gradle
 
-      - name: prepare patching environment
-        uses: eskatos/gradle-command-action@v2
-        with:
-          arguments: preparePatchingEnvironment
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.6
 
-      # Runs a single command using the runners shell
-      - name: apply patches
+      - name: Prepare patching environment
+        run: ./gradlew preparePatchingEnvironment
+
+      - name: Apply patches
         run: ./pm.apply-patches
 
-      - name: build
-        uses: eskatos/gradle-command-action@v2
-        with:
-          arguments: build
+      - name: Build with Gradle
+        run: ./gradlew build
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: jar
           path: ./build/libs/*
           retention-days: 30
-
-      # get jar name
-      - name: prepare run server
-        id: prepare_run_server
-        run: |
-          echo "::set-output name=version_name::$(grep 'modVersion=' < gradle.properties | sed 's/modVersion=//')"
-          rtmVersion="$(grep 'rtmVersion=' < gradle.properties | sed 's/rtmVersion=//')"
-          ngtVersion="$(grep 'ngtVersion=' < gradle.properties | sed 's/ngtVersion=//')"
-          curse() {
-              echo "$HOME/.gradle/caches/minecraft-mods/curse/$1/$2/$1-$2-raw.jar"
-          }
-          mkdir mods
-          cp "$(curse ngtlib "$ngtVersion")" mods
-          cp "$(curse realtrainmod "$rtmVersion")" mods
-
-      - name: run server
-        uses: anatawa12/minecraft-server-start-test@v1
-        with:
-          version: 1.12.2-14.23.5.2855
-          mod_jar: ./build/libs/fixRtm-${{ steps.prepare_run_server.outputs.version_name }}.jar
-          mods_dir: mods
