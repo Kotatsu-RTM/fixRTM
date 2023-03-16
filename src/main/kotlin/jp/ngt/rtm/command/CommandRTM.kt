@@ -44,7 +44,7 @@ class CommandRTM : CommandBase() {
         args: Array<out String>,
         pos: BlockPos?
     ): List<String> {
-        return listOf("delAllTrain", "door", "pan", "speed", "summon", "dismount")
+        return listOf("delAllTrain", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
     }
 
     @Throws(CommandException::class)
@@ -61,6 +61,14 @@ class CommandRTM : CommandBase() {
                 sender.sendMessage(TextComponentString("Deleted $trainCount trains."))
                 sender.sendMessage(TextComponentString("Deleted $entityCount entities in total."))
                 sender.sendMessage(TextComponentString("Deleted $formationCount formations."))
+            }
+            "howManyTrains" -> {
+                val trains = sender.entityWorld.loadedEntityList.filterIsInstance<EntityTrainBase>().filterNot { it.isDead }.size
+                val bogies = sender.entityWorld.loadedEntityList.filterIsInstance<EntityBogie>().filterNot { it.isDead }.size
+                val parts = sender.entityWorld.loadedEntityList.filterIsInstance<EntityVehiclePart>().filterNot { it.isDead }.size
+                val formations = FormationManager.getInstance().formations.size
+
+                sender.sendMessage(TextComponentString(" There are $formations formation(s), $trains train(s), ${trains + bogies + parts} entity(es) in the world."))
             }
             "twitter_tag" -> {
             }
