@@ -46,6 +46,7 @@ class CommandRTM : CommandBase() {
         pos: BlockPos?
     ): List<String> {
         return listOf("delAllTrain", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
+            .filter { it.contains(args.first()) }
     }
 
     @Throws(CommandException::class)
