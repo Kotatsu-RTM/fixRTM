@@ -12,7 +12,7 @@
  import net.minecraftforge.fml.relauncher.SideOnly;
  
  public abstract class ModelSetBase<T extends ModelConfig> extends ResourceSet<T> {
-@@ -32,26 +33,31 @@
+@@ -32,26 +33,32 @@
        super(par1);
     }
  
@@ -38,16 +38,17 @@
              this.guiTexture = ModelPackManager.INSTANCE.getResource((this.cfg).guiTexture);
           }
 +
++         ResourceLocation buttonLocation = ModelPackManager.INSTANCE.getResource(this.cfg.buttonTexture);
 +         Minecraft.getMinecraft().getTextureManager().loadTexture(
-+            this.buttonTexture,
-+            new SimpleTexture(this.buttonTexture)
++            buttonLocation,
++            new SimpleTexture(buttonLocation)
 +         );
        }
  
     }
  
     @SideOnly(Side.CLIENT)
-@@ -64,10 +70,11 @@
+@@ -64,10 +71,11 @@
  
     public T getConfig() {
        return this.cfg;
