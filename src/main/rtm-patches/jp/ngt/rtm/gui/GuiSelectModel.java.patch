@@ -51,6 +51,25 @@
     private List<ResourceSet> modelListAll;
     private List<ResourceSet> modelListSelect;
     private GuiButtonSelectModel[] selectButtons;
+@@ -147,14 +151,14 @@
+       }
+ 
+    }
+ 
+    public void drawScreen(int par1, int par2, float par3) {
+-      this.wasClicking = Mouse.isButtonDown(0);
+-      boolean flag = par1 < this.width && par1 >= this.width - 16;
+-      if (this.wasClicking && flag) {
+-         int i = par2 < 8 ? 8 : (par2 >= this.height ? this.height : par2);
++      boolean isButtonDown = Mouse.isButtonDown(0);
++      this.wasClicking = isButtonDown && (par1 < this.width && par1 >= this.width - 16) || (isButtonDown && this.wasClicking);
++      if (this.wasClicking) {
++         int i = par2 < 8 ? 8 : Math.min(par2, this.height);
+          int j = NGTMath.floor((float)i * (float)(this.modelListSelect.size() + 1) / (float)(this.height - 16));
+          this.scroll(j);
+       }
+ 
+       float f = this.zLevel;
 @@ -250,21 +254,27 @@
        }
  
