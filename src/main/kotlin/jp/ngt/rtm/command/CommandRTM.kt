@@ -58,9 +58,12 @@ class CommandRTM : CommandBase() {
                 val formationMap: MutableMap<*, *> = FormationManager.getInstance().formations
                 val formationCount = formationMap.size
                 formationMap.clear()
-                sender.sendMessage(TextComponentString("Deleted $trainCount trains."))
-                sender.sendMessage(TextComponentString("Deleted $entityCount entities in total."))
-                sender.sendMessage(TextComponentString("Deleted $formationCount formations."))
+
+                sender.sendMessage(TextComponentString("""
+                    Deleted $trainCount trains.
+                    Deleted $entityCount entities in total.
+                    Deleted $formationCount formations.
+                """.trimIndent()))
             }
             "howManyTrains" -> {
                 val trains = sender.entityWorld.loadedEntityList.filterIsInstance<EntityTrainBase>().filterNot { it.isDead }.size
