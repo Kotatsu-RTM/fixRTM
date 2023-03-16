@@ -17,6 +17,7 @@ import net.minecraft.command.CommandBase
 import net.minecraft.command.CommandException
 import net.minecraft.command.ICommandSender
 import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.nbt.JsonToNBT
 import net.minecraft.nbt.NBTException
 import net.minecraft.nbt.NBTTagCompound
@@ -64,6 +65,15 @@ class CommandRTM : CommandBase() {
                     Deleted $entityCount entities in total.
                     Deleted $formationCount formations.
                 """.trimIndent()))
+            }
+            "delFormation" -> {
+                if (sender.commandSenderEntity !is EntityPlayer) return
+                val player = sender.commandSenderEntity as EntityPlayer
+
+                val train = player.ridingEntity
+                if (train !is EntityTrainBase) return
+
+                train.setDead()
             }
             "howManyTrains" -> {
                 val trains = sender.entityWorld.loadedEntityList.filterIsInstance<EntityTrainBase>().filterNot { it.isDead }.size
