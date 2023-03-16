@@ -30,7 +30,7 @@ class CommandRTM : CommandBase() {
 
     override fun getUsage(commandSender: ICommandSender): String = "commands.rtm.usage"
 
-    inline fun <reified T : Entity> List<Entity>.killOllTypeOf() = this
+    inline fun <reified T : Entity> List<Entity>.killAllTypeOf() = this
         .asSequence()
         .filterIsInstance<T>()
         .filter { !it.isDead }
@@ -41,10 +41,10 @@ class CommandRTM : CommandBase() {
     override fun execute(server: MinecraftServer, sender: ICommandSender, args: Array<String>) {
         when (args.getOrNull(0)) {
             "delAllTrain" -> {
-                val trainCount = sender.entityWorld.loadedEntityList.killOllTypeOf<EntityTrainBase>()
+                val trainCount = sender.entityWorld.loadedEntityList.killAllTypeOf<EntityTrainBase>()
                 var entityCount = trainCount
-                entityCount += sender.entityWorld.loadedEntityList.killOllTypeOf<EntityBogie>()
-                entityCount += sender.entityWorld.loadedEntityList.killOllTypeOf<EntityVehiclePart>()
+                entityCount += sender.entityWorld.loadedEntityList.killAllTypeOf<EntityBogie>()
+                entityCount += sender.entityWorld.loadedEntityList.killAllTypeOf<EntityVehiclePart>()
                 val formationMap: MutableMap<*, *> = FormationManager.getInstance().formations
                 val formationCount = formationMap.size
                 formationMap.clear()
