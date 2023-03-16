@@ -22,6 +22,7 @@ import net.minecraft.nbt.NBTException
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.math.AxisAlignedBB
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.text.TextComponentString
 
 @Suppress("unused") // IDE bug: there are some references from library
@@ -36,6 +37,15 @@ class CommandRTM : CommandBase() {
         .filter { !it.isDead }
         .onEach { it.setDead() }
         .count()
+
+    override fun getTabCompletions(
+        server: MinecraftServer,
+        sender: ICommandSender,
+        args: Array<out String>,
+        pos: BlockPos?
+    ): List<String> {
+        return listOf("delAllTrain", "door", "pan", "speed", "summon", "dismount")
+    }
 
     @Throws(CommandException::class)
     override fun execute(server: MinecraftServer, sender: ICommandSender, args: Array<String>) {
