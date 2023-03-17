@@ -1,0 +1,32 @@
+--- a/jp/ngt/rtm/block/BlockStation.java
++++ b/jp/ngt/rtm/block/BlockStation.java
+@@ -4,14 +4,17 @@
+ import jp.ngt.ngtlib.block.BlockContainerCustom;
+ import jp.ngt.rtm.RTMCore;
+ import jp.ngt.rtm.block.tileentity.TileEntityStation;
+ import net.minecraft.block.material.Material;
+ import net.minecraft.block.state.IBlockState;
++import net.minecraft.item.ItemStack;
+ import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.util.EnumBlockRenderType;
++import net.minecraft.util.ResourceLocation;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
++import net.minecraftforge.fml.common.registry.ForgeRegistries;
+ 
+ public class BlockStation extends BlockContainerCustom {
+    public BlockStation() {
+       super(Material.ROCK);
+    }
+@@ -56,6 +59,11 @@
+          int j = pos.getY();
+          int k = pos.getZ();
+       }
+ 
+    }
++
++   @Override
++   protected ItemStack getItem(int damage) {
++      return new ItemStack(this);
++   }
+ }
