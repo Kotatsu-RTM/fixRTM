@@ -196,3 +196,19 @@
              BlockUtil.setBlock(world, i, j, k, RTMRail.TURNTABLE_CORE, 0, 3);
              TileEntityTurnTableCore tileentityturntablecore = (TileEntityTurnTableCore)BlockUtil.getTileEntity(world, i, j, k);
              tileentityturntablecore.setRailPositions(new RailPosition[]{start, end});
+@@ -379,10 +401,15 @@
+ 
+          return null;
+       }
+    }
+ 
++   @Override
++   protected ItemStack getItem(int damage) {
++      return new ItemStack(this);
++   }
++
+    public static enum MarkerType {
+       STANDARD(16711680),
+       SWITCH(255);
+ 
+       public final int color;
