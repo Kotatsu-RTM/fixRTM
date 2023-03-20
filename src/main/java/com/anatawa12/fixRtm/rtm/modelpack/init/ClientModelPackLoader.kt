@@ -9,6 +9,7 @@ import jp.ngt.rtm.modelpack.ModelPackManager
 import jp.ngt.rtm.modelpack.cfg.RRSConfig
 import jp.ngt.rtm.modelpack.init.ProgressStateHolder
 import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.texture.SimpleTexture
 import net.minecraft.crash.CrashReport
 import net.minecraftforge.fml.common.ProgressManager
 import org.apache.logging.log4j.LogManager
@@ -99,6 +100,14 @@ object ClientModelPackLoader {
 
                 ModelPackManager.INSTANCE
                     .registerResourceSet(RTMResource.RRS, RRSConfig(it.name).apply { file = it }, "")
+
+                //Framerate drops when load at runtime, so we'll load it beforehand.
+                ModelPackManager.INSTANCE.getResource(RRSConfig.fixName(it.name)).let { signLocation ->
+                    Minecraft.getMinecraft().textureManager.loadTexture(
+                        signLocation,
+                        SimpleTexture(signLocation)
+                    )
+                }
             }
 
             logger.debug("Registered rail load signs")
