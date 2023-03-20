@@ -159,7 +159,9 @@ class CommandRTM : CommandBase() {
             }
             else -> {
                 sender.sendMessage(TextComponentString("""
-                    /rtm delAllTrain : Delete all train
+                    /rtm delAllTrain : Delete all train(s)
+                    /rtm delFormation : Delete riding formation
+                    /rtm howManyTrains : Count all trains in current world
                     /rtm dismount : Dismount player from vehicle
                 """.trimIndent()))
             }
