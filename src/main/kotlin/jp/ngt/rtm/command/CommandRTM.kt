@@ -158,8 +158,10 @@ class CommandRTM : CommandBase() {
                 getCommandSenderAsPlayer(sender).dismountRidingEntity()
             }
             else -> {
-                sender.sendMessage(TextComponentString("/rtm delAllTrain : Delete all train"))
-                sender.sendMessage(TextComponentString("/rtm dismount : Dismount player from vehicle"))
+                sender.sendMessage(TextComponentString("""
+                    /rtm delAllTrain : Delete all train
+                    /rtm dismount : Dismount player from vehicle
+                """.trimIndent()))
             }
         }
     }
