@@ -5,6 +5,7 @@
 package com.anatawa12.fixRtm.asm.patching
 
 import com.anatawa12.fixRtm.Loggers
+import com.anatawa12.fixRtm.asm.config.MainConfig
 import io.sigpipe.jbsdiff.Patch
 import net.minecraft.launchwrapper.IClassTransformer
 import java.io.ByteArrayOutputStream
@@ -15,10 +16,10 @@ class PatchApplier : IClassTransformer {
         if (basicClass == null) return null
         val patch = getPatchAndSha1(name)
         if (patch == null) {
-            logger.trace("no patch found for $name")
+            logger?.debug("no patch found for $name")
             return basicClass
         }
-        logger.trace("patch found for $name")
+        logger?.debug("patch found for $name")
 
         checkSha(patch.oldSha1, basicClass) { "sha1 digest not match for class: $name. please check your mod version" }
 
@@ -28,7 +29,7 @@ class PatchApplier : IClassTransformer {
         Patch.patch(basicClass, patch.jbsdiff, out)
         val patched = out.toByteArray()
 
-        logger.trace("patched: $name")
+        logger?.debug("patched: $name")
 
         if (patch.newSha1 == null) return basicClass
 
@@ -66,7 +67,11 @@ class PatchApplier : IClassTransformer {
 
     private val classLoader = PatchApplier::class.java.classLoader
 
-    private val logger = Loggers.getLogger("jasm-patch-applier")
+    private val logger = try {
+        if (MainConfig.outputPatchApplierLog) Loggers.getLogger("jasm-patch-applier") else null
+    } catch (_: Exception) {
+        null
+    }
 
     private val sha1 = ThreadLocal.withInitial { MessageDigest.getInstance("SHA-1") }
 }
