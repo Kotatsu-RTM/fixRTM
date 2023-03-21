@@ -16,10 +16,10 @@ class PatchApplier : IClassTransformer {
         if (basicClass == null) return null
         val patch = getPatchAndSha1(name)
         if (patch == null) {
-            logger?.debug("no patch found for $name")
+            logger?.trace("no patch found for $name")
             return basicClass
         }
-        logger?.debug("patch found for $name")
+        logger?.trace("patch found for $name")
 
         checkSha(patch.oldSha1, basicClass) { "sha1 digest not match for class: $name. please check your mod version" }
 
@@ -29,7 +29,7 @@ class PatchApplier : IClassTransformer {
         Patch.patch(basicClass, patch.jbsdiff, out)
         val patched = out.toByteArray()
 
-        logger?.debug("patched: $name")
+        logger?.trace("patched: $name")
 
         if (patch.newSha1 == null) return basicClass
 
