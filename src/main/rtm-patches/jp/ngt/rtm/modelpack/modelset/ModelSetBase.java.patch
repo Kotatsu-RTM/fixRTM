@@ -1,18 +1,6 @@
 --- a/jp/ngt/rtm/modelpack/modelset/ModelSetBase.java
 +++ b/jp/ngt/rtm/modelpack/modelset/ModelSetBase.java
-@@ -6,10 +6,11 @@
- import jp.ngt.rtm.entity.util.CollisionObj;
- import jp.ngt.rtm.modelpack.ModelPackManager;
- import jp.ngt.rtm.modelpack.cfg.ModelConfig;
- import jp.ngt.rtm.render.ModelObject;
- import net.minecraft.client.Minecraft;
-+import net.minecraft.client.renderer.texture.SimpleTexture;
- import net.minecraft.util.ResourceLocation;
- import net.minecraftforge.fml.relauncher.Side;
- import net.minecraftforge.fml.relauncher.SideOnly;
- 
- public abstract class ModelSetBase<T extends ModelConfig> extends ResourceSet<T> {
-@@ -32,26 +33,32 @@
+@@ -32,24 +32,24 @@
        super(par1);
     }
  
@@ -37,18 +25,10 @@
 +            this.guiSE = com.anatawa12.fixRtm.scripting.FIXScriptUtil.getScriptAndDoScript(((ModelConfig)this.cfg).guiScriptPath);
              this.guiTexture = ModelPackManager.INSTANCE.getResource((this.cfg).guiTexture);
           }
-+
-+         ResourceLocation buttonLocation = ModelPackManager.INSTANCE.getResource(this.cfg.buttonTexture);
-+         Minecraft.getMinecraft().getTextureManager().loadTexture(
-+            buttonLocation,
-+            new SimpleTexture(buttonLocation)
-+         );
        }
  
     }
- 
-    @SideOnly(Side.CLIENT)
-@@ -64,10 +71,11 @@
+@@ -64,10 +64,11 @@
  
     public T getConfig() {
        return this.cfg;
