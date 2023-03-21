@@ -187,6 +187,15 @@ object MainConfig {
         """.trimOneLine()
     )
 
+    val outputPatchApplierLog = config.getBoolean(
+        "outputPatchApplierLog", categoryFixRTM,
+        false,
+        """
+            Sets whether the PatchApplier log is output or not.
+            This function is basically used for debugging, so it is recommended to set it to 'false' during normal game play.
+        """.trimIndent()
+    )
+
     init {
         if (config.hasChanged()) {
             config.save()
