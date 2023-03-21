@@ -8,18 +8,26 @@ import jp.ngt.rtm.modelpack.ModelPackException
 import jp.ngt.rtm.modelpack.ModelPackManager
 import jp.ngt.rtm.modelpack.cfg.RRSConfig
 import jp.ngt.rtm.modelpack.init.ProgressStateHolder
+import jp.ngt.rtm.modelpack.modelset.ModelSetBase
+import jp.ngt.rtm.modelpack.modelset.ResourceSet
+import kotlinx.coroutines.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.texture.SimpleTexture
 import net.minecraft.crash.CrashReport
 import net.minecraftforge.fml.common.ProgressManager
+import net.minecraftforge.fml.common.ProgressManager.ProgressBar
 import org.apache.logging.log4j.LogManager
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 object ClientModelPackLoader {
     private val logger = LogManager.getLogger("fixRTM/ClientModelPackLoader")
+    private val lock = ReentrantLock()
 
     fun load() {
         loadModels()
         constructModels()
+        loadButtonTextures()
         cleanup()
     }
 
@@ -122,30 +130,80 @@ object ClientModelPackLoader {
         val unConstructSets = ModelPackManager.INSTANCE.unconstructSets
         var i = 0
         val progress = ProgressManager.push("Construct Model", unConstructSets.size)
+        val size = unConstructSets.size
 
-        unConstructSets.forEach {
-            try {
-                progress.step(it.config.name)
-
-                it.constructOnClient()
-                it.finishConstruct()
-                it.state = ModelState.CONSTRUCTED
-
-                logger.trace("Model ${it.config.name} was constructed (${++i} / ${unConstructSets.size})")
-            } catch (throwable: Throwable) {
-                val sourceFile = it.config.file?.let { file -> "source file: $file" } ?: "unknown source file"
-                val wrappedException =
-                    ModelConstructingException("constructing resource: ${it.config.name} ($sourceFile)", throwable)
-
-                CrashReport
-                    .makeCrashReport(wrappedException, "Constructing RTM ModelPack")
-                    .apply {
-                        makeCategory("Initialization")
-                        Minecraft.getMinecraft().addGraphicsAndWorldToCrashReport(this)
+        runBlocking {
+            val asynchronousLoadingModels =
+                unConstructSets
+                    .filter { !it.config.synchronousLoading }
+                    .map {
+                        CoroutineScope(Dispatchers.Default).async {
+                            construct(progress, it, ++i, size)
+                        }
                     }
-                    .let { report -> Minecraft.getMinecraft().displayCrashReport(report) }
-            }
+
+            unConstructSets
+                .filter { it.config.synchronousLoading }
+                .forEach {
+                    construct(progress, it, ++i, size)
+                }
+
+            asynchronousLoadingModels.forEach { it.await() }
         }
+
+        ProgressManager.pop(progress)
+    }
+
+    private fun construct(progress: ProgressBar, resourceSet: ResourceSet<*>, index: Int, size: Int) {
+        try {
+            //progress.step(resourceSet.config.name)
+            stepBar(progress, resourceSet.config.name)
+
+            resourceSet.constructOnClient()
+            resourceSet.finishConstruct()
+            resourceSet.state = ModelState.CONSTRUCTED
+
+            logger.trace("Model ${resourceSet.config.name} was constructed ($index / $size)")
+        } catch (throwable: Throwable) {
+            val sourceFile =
+                resourceSet.config.file?.let { file -> "source file: $file" } ?: "unknown source file"
+            val wrappedException =
+                ModelConstructingException(
+                    "constructing resource: ${resourceSet.config.name} ($sourceFile)",
+                    throwable
+                )
+
+            CrashReport
+                .makeCrashReport(wrappedException, "Constructing RTM ModelPack")
+                .apply {
+                    makeCategory("Initialization")
+                    Minecraft.getMinecraft().addGraphicsAndWorldToCrashReport(this)
+                }
+                .let { report -> Minecraft.getMinecraft().displayCrashReport(report) }
+        }
+    }
+
+    private fun stepBar(bar: ProgressBar, message: String) {
+        lock.withLock {
+            bar.step(message)
+        }
+    }
+
+    private fun loadButtonTextures() {
+        val progress = ProgressManager.push("Load button textures", 1)
+        progress.step("")
+
+        ModelPackManager.INSTANCE.allModelSetMap
+            .map { it.value }
+            .map { it.values }
+            .filterIsInstance<ModelSetBase<*>>()
+            .forEach {
+                val buttonLocation = ModelPackManager.INSTANCE.getResource(it.config.buttonTexture)
+                Minecraft.getMinecraft().textureManager.loadTexture(
+                    buttonLocation,
+                    SimpleTexture(buttonLocation)
+                )
+            }
 
         ProgressManager.pop(progress)
     }
