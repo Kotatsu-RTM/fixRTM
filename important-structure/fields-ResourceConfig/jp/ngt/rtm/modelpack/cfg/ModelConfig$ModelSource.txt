@@ -16,4 +16,3 @@ type: Ljp/ngt/rtm/modelpack/cfg/ModelConfig;
 
 name: vertexShaderPath
 type: Ljava/lang/String;
-

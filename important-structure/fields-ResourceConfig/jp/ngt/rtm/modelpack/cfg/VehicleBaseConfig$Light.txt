@@ -16,4 +16,3 @@ type: Ljp/ngt/rtm/modelpack/cfg/VehicleBaseConfig;
 
 name: type
 type: B
-

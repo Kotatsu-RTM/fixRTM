@@ -43,4 +43,3 @@ type: [F
 
 name: yawCoefficient
 type: [F
-

@@ -1,4 +1,3 @@
 super: java/lang/Enum
 name: useRS
 type: Z
-

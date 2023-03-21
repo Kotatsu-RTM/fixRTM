@@ -31,4 +31,3 @@ type: Ljava/lang/String;
 
 name: smoothing
 type: Z
-

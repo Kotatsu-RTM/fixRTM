@@ -4,4 +4,3 @@ type: Lnet/minecraft/util/ResourceLocation;
 
 name: soundSE
 type: Ljavax/script/ScriptEngine;
-

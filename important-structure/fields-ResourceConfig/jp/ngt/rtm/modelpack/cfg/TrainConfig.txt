@@ -67,4 +67,3 @@ type: Ljava/lang/String;
 
 name: trainType
 type: Ljava/lang/String;
-

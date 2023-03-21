@@ -7,4 +7,3 @@ type: I
 
 name: resolutionV
 type: I
-

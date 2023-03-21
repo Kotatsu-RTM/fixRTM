@@ -28,4 +28,3 @@ type: Ljp/ngt/rtm/block/tileentity/MechanismType;
 
 name: useRedstonePower
 type: Z
-

@@ -58,4 +58,3 @@ type: Z
 
 name: yaw
 type: [F
-

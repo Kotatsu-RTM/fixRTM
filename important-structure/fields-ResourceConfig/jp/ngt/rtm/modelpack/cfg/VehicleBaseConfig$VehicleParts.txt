@@ -7,4 +7,3 @@ type: Ljp/ngt/rtm/modelpack/cfg/VehicleBaseConfig;
 
 name: transform
 type: [[F
-

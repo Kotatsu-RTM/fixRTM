@@ -13,4 +13,3 @@ type: Ljp/ngt/rtm/modelpack/cfg/VehicleBaseConfig;
 
 name: uv
 type: [F
-

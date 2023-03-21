@@ -19,4 +19,3 @@ type: Ljava/lang/String;
 
 name: value
 type: Ljava/lang/String;
-

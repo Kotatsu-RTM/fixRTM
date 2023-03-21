@@ -13,4 +13,3 @@ type: Ljava/lang/String;
 
 name: ornamentType
 type: Ljava/lang/String;
-

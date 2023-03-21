@@ -19,4 +19,3 @@ type: F
 
 name: model
 type: Ljp/ngt/rtm/modelpack/cfg/ModelConfig$ModelSource;
-

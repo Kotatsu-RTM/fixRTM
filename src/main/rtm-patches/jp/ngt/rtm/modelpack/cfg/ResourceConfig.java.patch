@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/modelpack/cfg/ResourceConfig.java
 +++ b/jp/ngt/rtm/modelpack/cfg/ResourceConfig.java
-@@ -5,10 +5,11 @@
+@@ -5,14 +5,17 @@
  public abstract class ResourceConfig {
     public short version;
     public boolean useCustomColor;
@@ -11,8 +11,14 @@
     @Deprecated
     public String defaultData;
  
++   public boolean synchronousLoading;
++
     public abstract String getName();
-@@ -28,14 +29,18 @@
+ 
+    public void init() {
+       if (this.defaultValues == null && this.defaultData != null) {
+          String[][] astring = DataMap.convertArg(this.defaultData);
+@@ -28,14 +31,18 @@
        }
  
     }

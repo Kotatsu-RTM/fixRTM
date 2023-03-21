@@ -19,4 +19,3 @@ type: Ljavax/script/ScriptEngine;
 
 name: syncFinished
 type: Z
-

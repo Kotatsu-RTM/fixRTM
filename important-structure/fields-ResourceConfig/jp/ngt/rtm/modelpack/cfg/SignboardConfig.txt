@@ -13,4 +13,3 @@ type: I
 
 name: lightValue
 type: I
-

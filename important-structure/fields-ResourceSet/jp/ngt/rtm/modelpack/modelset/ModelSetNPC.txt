@@ -4,4 +4,3 @@ type: Lnet/minecraft/util/ResourceLocation;
 
 name: texture
 type: Lnet/minecraft/util/ResourceLocation;
-

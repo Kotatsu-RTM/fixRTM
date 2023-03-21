@@ -85,4 +85,3 @@ type: [Ljp/ngt/rtm/modelpack/cfg/VehicleBaseConfig$Light;
 
 name: wheelRotationSpeed
 type: F
-

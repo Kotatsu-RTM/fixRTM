@@ -28,4 +28,3 @@ type: Ljava/lang/String;
 
 name: signalTexture
 type: Ljava/lang/String;
-

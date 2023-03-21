@@ -1,4 +1,3 @@
 super: jp/ngt/rtm/modelpack/modelset/ResourceSet
 name: texture
 type: Lnet/minecraft/util/ResourceLocation;
-

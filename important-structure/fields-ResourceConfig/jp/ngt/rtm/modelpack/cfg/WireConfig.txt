@@ -16,4 +16,3 @@ type: F
 
 name: yOffset
 type: F
-
