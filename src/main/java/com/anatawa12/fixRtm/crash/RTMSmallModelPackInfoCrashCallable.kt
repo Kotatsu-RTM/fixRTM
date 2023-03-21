@@ -16,29 +16,26 @@ import kotlin.concurrent.withLock
 object RTMSmallModelPackInfoCrashCallable : ICrashCallable {
     override fun call(): String = ModelPackManager.INSTANCE.modelSetMapLock.readLock().withLock {
         buildString {
-            append("Initialized ")
-                .append(ModelPackManager.INSTANCE.allModelSetMap.values.sumOf { it.size })
-                .append(" models")
-            if (NGTUtil.isSMP()) {
-                append(", Using ")
-                    .append(ModelPackManager.INSTANCE.smpModelSetMap.values.sumOf { it.size })
-                    .append(" models")
+            val initialized = "Initialized ${ModelPackManager.INSTANCE.allModelSetMap.values.sumOf { it.size }} models"
+            val using = when (NGTUtil.isSMP()) {
+                true -> ", Using ${ModelPackManager.INSTANCE.smpModelSetMap.values.sumOf { it.size }} models"
+                else -> ""
             }
-            append("\n\t")
-            ModelState.values().map { "${it.marker} = $it" }.joinTo(this)
-            append(", SMP = SMP includeds")
-            append("\n")
+
+            append("${initialized}${using}\n\t")
+
+            ModelState.values().joinTo(this) { "${it.marker} = $it" }
+            append(", SMP = SMP included\n")
 
             val map = collectModelStates()
 
             val cols = mutableListOf<TextTable.Column>()
             cols.add(TextTable.column("model pack"))
             cols.add(TextTable.column("all"))
-            for (state in ModelState.values()) {
-                cols.add(TextTable.column(state.marker))
-            }
-            if (NGTUtil.isSMP())
-                cols.add(TextTable.column("SMP"))
+
+            ModelState.values().forEach { cols.add(TextTable.column(it.marker)) }
+            if (NGTUtil.isSMP()) cols.add(TextTable.column("SMP"))
+
             val table = TextTable(cols)
             val valuesArray = arrayOfNulls<Any?>(cols.size)
 

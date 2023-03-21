@@ -8,6 +8,7 @@ import com.anatawa12.fixrtm.gradle.walkBottomUp
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.*
+import org.gradle.internal.impldep.org.eclipse.jgit.lib.ObjectChecker.type
 import java.io.File
 import java.util.function.Predicate
 
@@ -44,15 +45,22 @@ open class PrintFieldStructure : DefaultTask() {
 
         for (hClass in printClasses) {
             val file = buildString {
-                if (condition.test(hClass.internalName) && hClass.isLoaded) {
-                    append("super: ${hClass.parentClass?.internalName}\n")
-                    for (field in hClass.fields.filter { !it.isStatic }.sortedBy { it.name }) {
-                        append("name: ${field.name}\n")
-                        append("type: ${field.type}\n")
-                        append("\n")
-                    }
-                } else {
+                if (!condition.test(hClass.internalName) || !hClass.isLoaded) {
                     append("not loaded class\n")
+                    return@buildString
+                }
+
+                append("super: ${hClass.parentClass?.internalName}")
+
+                hClass.fields.filter { !it.isStatic }.sortedBy { it.name }.forEach {
+                    append(
+                        """
+
+                            name: ${it.name}
+                            type: ${it.type}
+
+                        """.trimIndent()
+                    )
                 }
             }
 
