@@ -20,22 +20,23 @@ object MainConfig {
     @JvmField
     val modelPackLoadSpeed: ModelPackLoadSpeed
     init {
+        config.getCategory(categoryModelLoading).remove("multiThreadConstructEnabled")?.let {
+            @Suppress("SimplifyBooleanWithConstants")
+            if (it.getBoolean(true) != false) return@let
+
+            config.getCategory(categoryModelLoading)
+                .get("modelPackLoadSpeed")!!
+                .set(ModelPackLoadSpeed.UseOriginal.configValue)
+        }
+
         val modelPackLoadSpeedInt = config.getInt(
             "modelPackLoadSpeed", categoryModelLoading,
             ModelPackLoadSpeed.WorkStealing.configValue,
             ModelPackLoadSpeed.minValue(),
             ModelPackLoadSpeed.maxValue(),
-            ModelPackLoadSpeed.computeComment())
+            ModelPackLoadSpeed.computeComment()
+        )
 
-        val multiThreadConstructEnabledProp = config.getCategory(categoryModelLoading).remove("multiThreadConstructEnabled")
-        if (multiThreadConstructEnabledProp != null) {
-            @Suppress("SimplifyBooleanWithConstants")
-            if (multiThreadConstructEnabledProp.getBoolean(true) == false) {
-                config.getCategory(categoryModelLoading)
-                    .get("modelPackLoadSpeed")!!
-                    .set(ModelPackLoadSpeed.UseOriginal.configValue)
-            }
-        }
         modelPackLoadSpeed = ModelPackLoadSpeed.byValue(modelPackLoadSpeedInt)
     }
 
@@ -65,18 +66,11 @@ object MainConfig {
         """.trimIndent()
     )
 
-    val scriptingMode: ScriptingMode
-    init {
-        var scriptingMode = ScriptingMode.getByConfigValue(scriptingModeStr.lowercase())
-        if (scriptingMode == null) {
-            if (scriptingModeStr.lowercase() == ScriptingMode.defaultConfigValue) {
-                scriptingMode = ScriptingMode.default
-            } else {
-                Loggers.getLogger("Config").fatal("your scriptingMode is not valid so we use default.")
-                scriptingMode = ScriptingMode.default
-            }
-        }
-        this.scriptingMode = scriptingMode
+    val scriptingMode: ScriptingMode = ScriptingMode.getByConfigValue(scriptingModeStr.lowercase()) ?: let {
+        if (scriptingModeStr.lowercase() != ScriptingMode.defaultConfigValue)
+            Loggers.getLogger("Config").fatal("your scriptingMode is not valid so we use default.")
+
+        ScriptingMode.default
     }
 
     @JvmField
@@ -111,21 +105,14 @@ object MainConfig {
     )
 
     @JvmField
-    val addModelPackInformationInAllCrashReports: Boolean
-    init {
-        val comment = """
+    val addModelPackInformationInAllCrashReports = config.getBoolean(
+        "addModelPackInformationInAllCrashReports", categoryBetterRtm,
+        false,
+        """
             adds model pack information about all models in compressed format in all crash reports.
             This may make your crash report very fat.
-        """.trimOneLine()
-        val defaultValue = false
-
-        val prop = config.get(categoryBetterRtm, "addModelPackInformationInAllCrashReports", false)
-        prop.languageKey = "addModelPackInformationInAllCrashReports"
-        if (prop.comment == null || !prop.comment.endsWith("[default: $defaultValue]"))
-            prop.set(defaultValue)
-        prop.comment = "$comment [default: $defaultValue]"
-        addModelPackInformationInAllCrashReports = prop.getBoolean(defaultValue)
-    }
+        """.trimIndent()
+    )
 
     @JvmField
     val useThreadLocalProperties = config.getBoolean(
@@ -134,7 +121,7 @@ object MainConfig {
         """
             fix compatibility problem with CustomNPCs using ThreadLocalProperties.
             ThreadLocalProperties is not stable enough so this fix is optional.
-        """.trimOneLine()
+        """.trimIndent()
     )
 
     @JvmField
@@ -184,7 +171,7 @@ object MainConfig {
         """
             expands the count of playable sound count at the same time.
             this may cause compatibility issue with Immersive Vehicles.
-        """.trimOneLine()
+        """.trimIndent()
     )
 
     val outputPatchApplierLog = config.getBoolean(
@@ -205,8 +192,7 @@ object MainConfig {
     enum class ScriptingMode(vararg val configValues: String) {
         CacheWithSai("cache-with-sai", "cache-with-rhino"),
         BetterWithNashorn("better-with-nashorn"),
-        UseRtmNormal("use-rtm-normal"),
-        ;
+        UseRtmNormal("use-rtm-normal");
 
         companion object {
             private val byConfigValue = values()
@@ -225,8 +211,8 @@ object MainConfig {
         UseOriginal(0, "Slowest; Use Original"),
         SingleThreaded(1, "Slow; Single thread"),
         MultiThreaded(2, "Faster; use one of third of your processor"),
-        WorkStealing(3, "Fastest; use all processors; Default"),
-        ;
+        WorkStealing(3, "Fastest; use all processors; Default");
+
         companion object {
             private val byValue = values().associateBy { it.configValue }
             fun byValue(value: Int) = byValue[value] ?: error("invalid or unsupported loading speed")
@@ -237,6 +223,4 @@ object MainConfig {
                 .joinToString("") { "${it.configValue}: ${it.description}\n" }
         }
     }
-
-    private fun String.trimOneLine() = trimIndent().replace(Regex("""\r\n|\n|\r"""), " ")
 }
