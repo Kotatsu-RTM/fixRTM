@@ -44,7 +44,6 @@ import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.ModMetadata
 import net.minecraftforge.fml.common.event.FMLConstructionEvent
 import net.minecraftforge.fml.common.event.FMLInitializationEvent
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.PlayerEvent
@@ -130,11 +129,6 @@ object FixRtm {
         }
     }
 
-    @Mod.EventHandler
-    fun postInit(event: FMLPostInitializationEvent) {
-        if (event.side.isClient) ClientModelPackLoader.load()
-    }
-
     private val thrownMarker = CrashReport("", Throwable())
     private val crashReportHolder = AtomicReference<CrashReport?>(null)
 
@@ -155,6 +149,7 @@ object FixRtm {
     @Mod.EventHandler
     @Suppress("UNUSED_PARAMETER")
     fun init(e: FMLInitializationEvent) {
+        if (e.side.isClient) ClientModelPackLoader.load()
     }
 
     @SubscribeEvent
