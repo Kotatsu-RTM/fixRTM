@@ -65,7 +65,7 @@ object FIXFileLoader {
                 }
             }
             // add fixRTM, rtm and
-            files += zipUrlToFile(loader, FIXFileLoader::class.java.name.replace('.', '/') + ".class")
+            files += zipUrlToFile(loader, "${FIXFileLoader::class.java.name.replace('.', '/')}.class")
             files += zipUrlToFile(loader, "assets/rtm/lang/ja_JP.lang")
             files += zipUrlToFile(loader, "assets/ngtlib/lang/ja_JP.lang")
         }
