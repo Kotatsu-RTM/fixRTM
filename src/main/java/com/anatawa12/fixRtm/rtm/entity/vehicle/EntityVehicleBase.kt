@@ -27,9 +27,9 @@ fun EntityVehicleBase<*>.addEntityCrashInfo(category: CrashReportCategory) =
 
 fun getChunkPosArray(entity: EntityVehicleBase<*>) =
     mutableSetOf<ChunkPos>().apply {
-        addAll(entity.floors.map { entity.world.getChunk(it.position).pos })
+        addAll(entity.floors.map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
         if (entity !is EntityTrainBase) return@apply
-        addAll(entity.bogieController.bogies.filterNotNull().map { entity.world.getChunk(it.position).pos })
+        addAll(entity.bogieController.bogies.filterNotNull().map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
     }.flatMap { listOf(it.x, it.z) }.toIntArray()
 
 fun intArrayToChunks(array: IntArray) =

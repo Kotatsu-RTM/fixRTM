@@ -22,14 +22,13 @@ object NewChunkManager: LoadingCallback {
     }
 
     fun updateChunks(vehicle: EntityVehicleBase<*>) {
-        val world = checkSide(vehicle.world)
         val ticket = getTicket(vehicle)
         val loadingChunks = getLoadingChunks(vehicle)
         val currentChunks = mutableSetOf<ChunkPos>().apply {
-            add(world.getChunk(vehicle.position).pos)
-            addAll(vehicle.floors.map { world.getChunk(it.position).pos })
+            add(ChunkPos(vehicle.position.x shr 4, vehicle.position.z shr 4))
+            addAll(vehicle.floors.map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
             if (vehicle is EntityTrainBase)
-                addAll(vehicle.bogieController.bogies.map { world.getChunk(it.position).pos })
+                addAll(vehicle.bogieController.bogies.map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
         }
 
         //Old chunks
