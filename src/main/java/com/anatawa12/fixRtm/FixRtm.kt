@@ -228,12 +228,12 @@ object FixRtm {
     //                       item_train_fixrtm_test
 
     @SubscribeEvent
-    @Suppress("UNUSED_PARAMETER")
     fun onPlayerLoggedIn(e: PlayerEvent.PlayerLoggedInEvent) {
         if (!(e.player as EntityPlayerMP).hasFixRTM) {
-            e.player.sendMessage(TextComponentString("In this server, fixRTM is enabled. " +
-                    "It's recommended to use fixRTM even on client.")
-                .setStyle(Style().setColor(TextFormatting.YELLOW)))
+            e.player.sendMessage(
+                TextComponentString("In this server, fixRTM is enabled. It's recommended to use fixRTM even on client.")
+                    .apply { style = Style().setColor(TextFormatting.YELLOW) }
+            )
         }
     }
 
