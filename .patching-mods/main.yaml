@@ -121,6 +121,7 @@ mods:
       - jp.ngt.rtm.gui.GuiRailMarker
       - jp.ngt.rtm.gui.GuiSelectModel
       - jp.ngt.rtm.gui.GuiSignalConverter
+      - jp.ngt.rtm.gui.GuiSpeaker
       - jp.ngt.rtm.gui.GuiVehicleControlPanel
       - jp.ngt.rtm.gui.RTMGuiHandler
       - jp.ngt.rtm.item.ItemCargo
