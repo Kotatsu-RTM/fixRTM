@@ -37,9 +37,7 @@ fun threadFactoryWithPrefix(prefix: String, group: ThreadGroup = getThreadGroup(
     private val threadNumber = AtomicInteger(1)
 
     override fun newThread(r: Runnable?): Thread {
-        val t = Thread(group, r,
-            "$prefix-" + threadNumber.getAndIncrement(),
-            0)
+        val t = Thread(group, r, "$prefix-${threadNumber.getAndIncrement()}", 0)
         if (t.isDaemon) t.isDaemon = false
         if (t.priority != Thread.NORM_PRIORITY) t.priority = Thread.NORM_PRIORITY
         return t
@@ -55,56 +53,50 @@ val MS932 = Charset.forName("MS932")
 val fixRTMCommonExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
     threadFactoryWithPrefix("fixrtm-common-executor"))
 
-fun File.directoryDigestBaseStream() = SequenceInputStream(Iterators.asEnumeration(
-    this.sortedWalk()
-        .flatMap {
-            sequenceOf(
-                it.toRelativeString(this).byteInputStream(),
-                it.inputStream().buffered()
-            )
-        }
-        .iterator()
-))
+fun File.directoryDigestBaseStream() = SequenceInputStream(
+    Iterators.asEnumeration(
+        this.sortedWalk()
+            .flatMap {
+                sequenceOf(
+                    it.toRelativeString(this).byteInputStream(),
+                    it.inputStream().buffered()
+                )
+            }
+            .iterator()
+    )
+)
 
 fun DataOutput.writeUTFNullable(string: String?) = closeScope {
     if (string == null) return writeShort(0xFFFF)
 
-    var utflen = 0
+    string.map {
+            when {
+                it.code in 0x0001..0x007F -> 1
+                it.code <= 0x07FF -> 2
+                else -> 3
+            }
+        }
+        .sum()
+        .let { if (it >= 0xFFFF) throw UTFDataFormatException("encoded string too long: $it bytes") }
 
-    for (c in string) {
-        @Suppress("NAME_SHADOWING")
-        val c = c.code
-        if (c in 0x0001..0x007F) {
-            utflen++
-        } else if (c <= 0x07FF) {
-            utflen += 2
-        } else {
-            utflen += 3
+    val bytes = mutableListOf<Byte>()
+
+    string.map { it.code }.forEach {
+        when {
+            it in 0x0001..0x007F -> bytes += it.toByte()
+            it > 0x07FF -> {
+                bytes += (0xE0 or (it shr 12 and 0x0F)).toByte()
+                bytes += (0x80 or (it shr 6 and 0x3F)).toByte()
+                bytes += (0x80 or (it shr 0 and 0x3F)).toByte()
+            }
+            else -> {
+                bytes += (0xC0 or (it shr 6 and 0x1F)).toByte()
+                bytes += (0x80 or (it shr 0 and 0x3F)).toByte()
+            }
         }
     }
 
-    val bytes = ArrayPool.bytePool.request(utflen).closer().array
-
-    if (utflen >= 0xFFFF)
-        throw UTFDataFormatException("encoded string too long: $utflen bytes")
-
-    var count = 0
-    for (c in string) {
-        @Suppress("NAME_SHADOWING")
-        val c = c.code
-        if (c >= 0x0001 && c <= 0x007F) {
-            bytes[count++] = c.toByte()
-        } else if (c > 0x07FF) {
-            bytes[count++] = (0xE0 or (c shr 12 and 0x0F)).toByte()
-            bytes[count++] = (0x80 or (c shr 6 and 0x3F)).toByte()
-            bytes[count++] = (0x80 or (c shr 0 and 0x3F)).toByte()
-        } else {
-            bytes[count++] = (0xC0 or (c shr 6 and 0x1F)).toByte()
-            bytes[count++] = (0x80 or (c shr 0 and 0x3F)).toByte()
-        }
-    }
-
-    write(bytes)
+    write(bytes.toByteArray())
 }
 
 fun DataInput.readUTFNullable(): String? = closeScope {
@@ -140,14 +132,16 @@ fun DataInput.readUTFNullable(): String? = closeScope {
                 if (byteI > length) throw UTFDataFormatException("malformed input: partial character at end")
                 val char2 = bytes[byteI - 2].toInt()
                 val char3 = bytes[byteI - 1].toInt()
-                if (char2 and 0xC0 != 0x80 || char3 and 0xC0 != 0x80) throw UTFDataFormatException("malformed input around byte " + (byteI - 1))
+
+                if (char2 and 0xC0 != 0x80 || char3 and 0xC0 != 0x80)
+                    throw UTFDataFormatException("malformed input around byte ${byteI - 1}")
+
                 chars[charI++] = (c and 0x0F shl 12)
                     .or(char2 and 0x3F shl 6)
                     .or(char3 and 0x3F shl 0)
                     .toChar()
             }
-            else -> throw UTFDataFormatException(
-                "malformed input around byte $byteI")
+            else -> throw UTFDataFormatException("malformed input around byte $byteI")
         }
     }
 
@@ -264,3 +258,5 @@ fun EntityPlayer.openGui(fixGuiId: GuiId, world: World, pos: Vec3i) {
 fun EntityPlayer.openGui(fixGuiId: GuiId, world: World, x: Int, y: Int, z: Int) {
     openGui(FixRtm, fixGuiId.ordinal, world, x, y, z)
 }
+
+fun String.trimOneLine() = trimIndent().replace(Regex("""\r\n|\n|\r"""), " ")

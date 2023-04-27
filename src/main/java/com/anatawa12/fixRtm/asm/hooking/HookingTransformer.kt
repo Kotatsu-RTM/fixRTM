@@ -4,6 +4,7 @@
 
 package com.anatawa12.fixRtm.asm.hooking
 
+import com.anatawa12.fixRtm.trimOneLine
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 
@@ -12,9 +13,11 @@ class HookingTransformer : IClassTransformer {
         if (basicClass == null) return null
         val cw = ClassWriter(0)
         var cv: ClassVisitor = cw
-        cv = MethodVisitingClassVisitor(cv, listOfNotNull(
-            ::NewEntityTrackerVisitor.takeUnless { name == "com.anatawa12.fixRtm.rtm.entity.vehicle.VehicleTrackerEntryKt" },
-        ))
+        cv = MethodVisitingClassVisitor(
+            cv, listOfNotNull(
+                ::NewEntityTrackerVisitor.takeUnless { name == "com.anatawa12.fixRtm.rtm.entity.vehicle.VehicleTrackerEntryKt" },
+            )
+        )
         if (name == "net.minecraftforge.fml.common.FMLContainer") cv = FMLContainerClassVisitor(cv)
         ClassReader(basicClass).accept(cv, 0)
         return cw.toByteArray()
@@ -37,11 +40,13 @@ class HookingTransformer : IClassTransformer {
                 && desc == "(Lnet/minecraft/entity/Entity;IIIZ)V"
             ) {
                 afterNew = false
-                super.visitMethodInsn(Opcodes.INVOKESTATIC,
+                super.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
                     "com/anatawa12/fixRtm/rtm/entity/vehicle/VehicleTrackerEntryKt",
                     "newEntityTrackerEntry",
                     "(Lnet/minecraft/entity/Entity;IIIZ)Lnet/minecraft/entity/EntityTrackerEntry;",
-                    false)
+                    false
+                )
                 super.visitInsn(Opcodes.SWAP)
                 super.visitInsn(Opcodes.POP)
                 super.visitInsn(Opcodes.SWAP)
@@ -78,24 +83,26 @@ class HookingTransformer : IClassTransformer {
             desc: String?,
             signature: String?,
             exceptions: Array<out String>?
-        ): MethodVisitor? {
-            var mv = super.visitMethod(access, name, desc, signature, exceptions) ?: return null
-            if (name == "readData" && desc == "(L" +
-                "net/minecraft/world/storage/SaveHandler;L" +
-                "net/minecraft/world/storage/WorldInfo;L" +
-                "java/util/Map;L" +
-                "net/minecraft/nbt/NBTTagCompound;)V") {
-                mv = FMLContainerReadDataMethodVisitor(mv)
-            }
-            return mv
+        ): MethodVisitor? = super.visitMethod(access, name, desc, signature, exceptions).let {
+            if (
+                name == "readData" && desc == """
+                        (L
+                        net/minecraft/world/storage/SaveHandler;L
+                        net/minecraft/world/storage/WorldInfo;L
+                        java/util/Map;L
+                        net/minecraft/nbt/NBTTagCompound;)V
+                    """.trimOneLine()
+            ) FMLContainerReadDataMethodVisitor(it) else it
         }
     }
 
     class FMLContainerReadDataMethodVisitor(mv: MethodVisitor) : MethodVisitor(Opcodes.ASM5, mv) {
         override fun visitCode() {
             super.visitCode()
-            super.visitMethodInsn(Opcodes.INVOKESTATIC, "com/anatawa12/fixRtm/FixHooks",
-                "onFMLReadData", "()V", false)
+            super.visitMethodInsn(
+                Opcodes.INVOKESTATIC, "com/anatawa12/fixRtm/FixHooks",
+                "onFMLReadData", "()V", false
+            )
         }
     }
 }
