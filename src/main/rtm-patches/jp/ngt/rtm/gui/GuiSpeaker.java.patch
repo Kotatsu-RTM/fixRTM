@@ -20,6 +20,32 @@
           if (k == this.chooseSoundId - 1) {
              guibutton.enabled = false;
           }
+@@ -50,11 +47,11 @@
+       this.initSoundList();
+    }
+ 
+    private void initSoundList() {
+       int i = 30;
+-      int j = 200;
++      int j = this.width / 4;
+       this.currentScrollSub = 0;
+       if (!this.soundButtons.isEmpty()) {
+          this.buttonList.removeAll(this.soundButtons);
+       }
+ 
+@@ -64,11 +61,11 @@
+          int k = 0;
+ 
+          for(String s1 : RTMSound.ALL_OGG_FILES) {
+             if (s1.contains(s)) {
+                int l = (k - this.currentScrollSub) * 20;
+-               int i1 = this.width - (i + j);
++               int i1 = (this.width / 4) * 3;
+                GuiButton guibutton = new GuiButton(500 + k, i1, l, j, 20, s1);
+                this.buttonList.add(guibutton);
+                this.soundButtons.add(guibutton);
+                ++k;
+             }
 @@ -80,13 +77,13 @@
     public void drawScreen(int par1, int par2, float par3) {
        this.drawDefaultBackground();
