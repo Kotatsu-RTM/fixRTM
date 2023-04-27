@@ -4,6 +4,7 @@
 
 package jp.ngt.rtm.command
 
+import com.anatawa12.fixRtm.trimOneLine
 import jp.ngt.rtm.RTMResource
 import jp.ngt.rtm.entity.train.*
 import jp.ngt.rtm.entity.train.parts.EntityVehiclePart
@@ -32,7 +33,7 @@ class CommandRTM : CommandBase() {
 
     override fun getUsage(commandSender: ICommandSender): String = "commands.rtm.usage"
 
-    inline fun <reified T : Entity> List<Entity>.killAllTypeOf() = this
+    private inline fun <reified T : Entity> List<Entity>.killAllTypeOf() = this
         .asSequence()
         .filterIsInstance<T>()
         .filter { !it.isDead }
@@ -45,7 +46,7 @@ class CommandRTM : CommandBase() {
         args: Array<out String>,
         pos: BlockPos?
     ): List<String> {
-        return listOf("delAllTrain", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
+        return listOf("delAllTrain", "delFormation", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
             .filter { it.contains(args.first()) }
     }
 
@@ -54,57 +55,74 @@ class CommandRTM : CommandBase() {
         when (args.getOrNull(0)) {
             "delAllTrain" -> {
                 val trainCount = sender.entityWorld.loadedEntityList.killAllTypeOf<EntityTrainBase>()
-                var entityCount = trainCount
-                entityCount += sender.entityWorld.loadedEntityList.killAllTypeOf<EntityBogie>()
-                entityCount += sender.entityWorld.loadedEntityList.killAllTypeOf<EntityVehiclePart>()
-                val formationMap: MutableMap<*, *> = FormationManager.getInstance().formations
+                val entityCount = with(sender.entityWorld.loadedEntityList) {
+                    trainCount + killAllTypeOf<EntityBogie>() + killAllTypeOf<EntityVehiclePart>()
+                }
+
+                val formationMap = FormationManager.getInstance().formations
                 val formationCount = formationMap.size
                 formationMap.clear()
 
-                sender.sendMessage(TextComponentString("""
-                    Deleted $trainCount trains.
-                    Deleted $entityCount entities in total.
-                    Deleted $formationCount formations.
-                """.trimIndent()))
+                sender.sendMessage(
+                    TextComponentString(
+                        """
+                            Deleted $trainCount train(s).
+                            Deleted $formationCount formation(s).
+                            Deleted $entityCount entity(es) in total.
+                        """.trimIndent()
+                    )
+                )
             }
             "delFormation" -> {
-                if (sender.commandSenderEntity !is EntityPlayer) return
-                val player = sender.commandSenderEntity as EntityPlayer
-
-                val train = player.ridingEntity
-                if (train !is EntityTrainBase) return
+                val player = sender.commandSenderEntity as? EntityPlayer ?: return
+                val train = player.ridingEntity as? EntityTrainBase ?: return
 
                 train.setDead()
             }
             "howManyTrains" -> {
-                val trains = sender.entityWorld.loadedEntityList.filterIsInstance<EntityTrainBase>().filterNot { it.isDead }.size
-                val bogies = sender.entityWorld.loadedEntityList.filterIsInstance<EntityBogie>().filterNot { it.isDead }.size
-                val parts = sender.entityWorld.loadedEntityList.filterIsInstance<EntityVehiclePart>().filterNot { it.isDead }.size
+                val loadedEntityList = sender.entityWorld.loadedEntityList
+
+                val bogies = loadedEntityList.filterIsInstance<EntityBogie>().filterNot { it.isDead }.size
+                val trains = loadedEntityList.filterIsInstance<EntityTrainBase>().filterNot { it.isDead }.size
+                val parts = loadedEntityList.filterIsInstance<EntityVehiclePart>().filterNot { it.isDead }.size
+
                 val formations = FormationManager.getInstance().formations.size
 
-                sender.sendMessage(TextComponentString(" There are $formations formation(s), $trains train(s), ${trains + bogies + parts} entity(es) in the world."))
+                sender.sendMessage(
+                    TextComponentString(
+                        """
+                            There are $trains train(s), $formations formation(s),
+                            ${trains + bogies + parts} entity(es) in the world.
+                        """.trimOneLine()
+                    )
+                )
             }
             "twitter_tag" -> {
             }
             "door", "pan", "speed" -> {
                 // changing state of nearby train
 
-                val player = getCommandSenderAsPlayer(sender)
                 if (args.size <= 1) throw CommandException("fix-rtm.rtm.commands.rtm.state.usage")
+
+                val byteMinMax = Byte.MIN_VALUE..Byte.MAX_VALUE
+
+                val player = getCommandSenderAsPlayer(sender)
                 val state = parseInt(args[1])
 
-                val entities = sender.entityWorld.getEntitiesWithinAABB(EntityTrainBase::class.java,
-                    AxisAlignedBB(player.positionVector, player.positionVector).grow(16.0))
+                val entities = sender.entityWorld.getEntitiesWithinAABB(
+                    EntityTrainBase::class.java,
+                    AxisAlignedBB(player.positionVector, player.positionVector).grow(16.0)
+                )
 
                 when (args[0]) {
-                    "door" -> for (entity in entities) {
-                        entity.setVehicleState(TrainState.TrainStateType.Door, state.coerceIn(-128..127).toByte())
+                    "door" -> entities.forEach {
+                        it.setVehicleState(TrainState.TrainStateType.Door, state.coerceIn(byteMinMax).toByte())
                     }
-                    "pan" -> for (entity in entities) {
-                        entity.setVehicleState(TrainState.TrainStateType.Pantograph, state.coerceIn(-128..127).toByte())
+                    "pan" -> entities.forEach {
+                        it.setVehicleState(TrainState.TrainStateType.Pantograph, state.coerceIn(byteMinMax).toByte())
                     }
-                    "speed" -> for (entity in entities) {
-                        entity.speed = state / 72.0f
+                    "speed" -> entities.forEach {
+                        it.speed = state / 72.0F
                     }
                 }
             }
@@ -118,7 +136,7 @@ class CommandRTM : CommandBase() {
                 val y = parseInt(args[4])
                 val z = parseInt(args[5])
 
-                val cYaw = if (args.size >= 7) parseDouble(args[6]).toFloat() else 0f
+                val cYaw = if (args.size >= 7) parseDouble(args[6]).toFloat() else 0.0F
                 val state = if (args.size >= 8) try { JsonToNBT.getTagFromJson(buildString(args, 7)) }
                 catch (e: NBTException) { throw CommandException("commands.summon.tagError", e.message) }
                 else NBTTagCompound()
@@ -137,13 +155,13 @@ class CommandRTM : CommandBase() {
                 if (modelSet.isDummy || modelSet.config.subType != type.subType)
                     throw CommandException("fix-rtm.rtm.commands.rtm.summon.model-not-found", modelName, trainType)
 
-                val railMap = TileEntityLargeRailBase.getRailMapFromCoordinates(world, player, x + .5, y + .5, z + .5)
+                val railMap = TileEntityLargeRailBase
+                    .getRailMapFromCoordinates(world, player, x + .5, y + .5, z + .5)
                     ?: throw CommandException("fix-rtm.rtm.commands.rtm.summon.rail-not-found", "$x, $y, $z")
 
                 // check obstacle
-                if (!ItemTrain.checkObstacle(modelSet.config, player, world, x, y, z, railMap)) {
+                if (!ItemTrain.checkObstacle(modelSet.config, player, world, x, y, z, railMap))
                     throw CommandException("commands.summon.failed")
-                }
 
                 val pr = ItemTrain.computePosRotation(railMap, x, z, cYaw)
 
@@ -158,12 +176,16 @@ class CommandRTM : CommandBase() {
                 getCommandSenderAsPlayer(sender).dismountRidingEntity()
             }
             else -> {
-                sender.sendMessage(TextComponentString("""
-                    /rtm delAllTrain : Delete all train(s)
-                    /rtm delFormation : Delete riding formation
-                    /rtm howManyTrains : Count all trains in current world
-                    /rtm dismount : Dismount player from vehicle
-                """.trimIndent()))
+                sender.sendMessage(
+                    TextComponentString(
+                        """
+                            /rtm delAllTrain : Delete all train(s)
+                            /rtm delFormation : Delete riding formation
+                            /rtm howManyTrains : Count all trains in current world
+                            /rtm dismount : Dismount player from vehicle
+                        """.trimIndent()
+                    )
+                )
             }
         }
     }
