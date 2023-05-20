@@ -77,10 +77,9 @@ class CommandRTM : CommandBase() {
                 val player = sender.commandSenderEntity as? EntityPlayer ?: return
                 val train = player.ridingEntity as? EntityTrainBase ?: return
 
-                train.formation?.entries?.forEach { it?.train?.setDead() }
-
-                FormationManager.getInstance().apply {
-                    formations.values.firstOrNull { it.id == train.formation?.id }?.let { removeFormation(it.id) }
+                train.formation?.apply {
+                    entries?.forEach { it?.train?.setDead() }
+                    id.let { FormationManager.getInstance().removeFormation(it) }
                 }
             }
             "howManyTrains" -> {
