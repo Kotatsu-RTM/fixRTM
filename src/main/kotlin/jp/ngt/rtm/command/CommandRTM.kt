@@ -79,7 +79,7 @@ class CommandRTM : CommandBase() {
 
                 train.formation?.apply {
                     entries?.forEach { it?.train?.setDead() }
-                    id.let { FormationManager.getInstance().removeFormation(it) }
+                    FormationManager.getInstance().removeFormation(id)
                 }
             }
             "howManyTrains" -> {
