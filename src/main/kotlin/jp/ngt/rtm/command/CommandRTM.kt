@@ -59,9 +59,10 @@ class CommandRTM : CommandBase() {
                     trainCount + killAllTypeOf<EntityBogie>() + killAllTypeOf<EntityVehiclePart>()
                 }
 
-                val formationMap = FormationManager.getInstance().formations
-                val formationCount = formationMap.size
-                formationMap.clear()
+                val formationCount = with(FormationManager.getInstance().formations) {
+                    clear()
+                    size
+                }
 
                 sender.sendMessage(
                     TextComponentString(
