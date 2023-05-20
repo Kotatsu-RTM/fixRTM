@@ -54,14 +54,14 @@ class CommandRTM : CommandBase() {
     override fun execute(server: MinecraftServer, sender: ICommandSender, args: Array<String>) {
         when (args.getOrNull(0)) {
             "delAllTrain" -> {
+                val formationMap = FormationManager.getInstance().formations
+                val formationCount = formationMap.size
+                formationMap.clear()
+
                 val trainCount = sender.entityWorld.loadedEntityList.killAllTypeOf<EntityTrainBase>()
                 val entityCount = with(sender.entityWorld.loadedEntityList) {
                     trainCount + killAllTypeOf<EntityBogie>() + killAllTypeOf<EntityVehiclePart>()
                 }
-
-                val formationMap = FormationManager.getInstance().formations
-                val formationCount = formationMap.size
-                formationMap.clear()
 
                 sender.sendMessage(
                     TextComponentString(
