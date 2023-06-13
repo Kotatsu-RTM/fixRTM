@@ -3,15 +3,14 @@
 /// See LICENSE at https://github.com/fixrtm/fixRTM for more details
 
 import com.anatawa12.jarInJar.gradle.TargetPreset
-import com.anatawa12.modPatching.source.internal.readTextOr
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "1.8.0"
+    kotlin("jvm") version "1.8.22"
     id("net.minecraftforge.gradle")
-    id("com.anatawa12.mod-patching.binary") version "2.1.3"
-    id("com.anatawa12.mod-patching.source") version "2.1.3"
-    id("com.anatawa12.mod-patching.resources-dev") version "2.1.3"
+    id("com.anatawa12.mod-patching.binary") version "2.1.5"
+    id("com.anatawa12.mod-patching.source") version "2.1.5"
+    id("com.anatawa12.mod-patching.resources-dev") version "2.1.5"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.anatawa12.jarInJar") version "1.0.3"
 }
@@ -40,17 +39,17 @@ val shade by configurations.creating
 configurations.implementation.get().extendsFrom(shade)
 
 repositories {
-    mavenCentral()
+    maven { url = uri("https://repo.siro256.dev/repository/maven-public/") }
 }
 
 dependencies {
-    "minecraft"("net.minecraftforge:forge:1.12.2-14.23.5.2855")
+    "minecraft"("net.minecraftforge:forge:1.12.2-14.23.5.2860")
 
     shade(kotlin("stdlib-jdk7"))
-    shade("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    shade("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     shade("io.sigpipe:jbsdiff:1.0")
     shade("com.anatawa12.sai:sai:0.0.2")
-    shade("org.jetbrains:annotations:24.0.0")
+    shade("org.jetbrains:annotations:24.0.1")
     shade("org.sejda.imageio:webp-imageio:0.1.6")
 
     compileOnly(files(file("run/fixrtm-cache/script-compiled-class")))
@@ -62,9 +61,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.sarxos/webcam-capture
     compileOnly("com.github.sarxos:webcam-capture:0.3.12")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
 }
 
 val processResources by tasks.getting(Copy::class) {
