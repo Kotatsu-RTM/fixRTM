@@ -58,17 +58,18 @@ class CommandRTM : CommandBase() {
                 val formationCount = formationMap.size
                 formationMap.clear()
 
-                val trainCount = sender.entityWorld.loadedEntityList.killAllTypeOf<EntityTrainBase>()
-                val entityCount = with(sender.entityWorld.loadedEntityList) {
-                    trainCount + killAllTypeOf<EntityBogie>() + killAllTypeOf<EntityVehiclePart>()
-                }
+                val loadedEntityList = sender.entityWorld.loadedEntityList
+
+                val bogieCount = loadedEntityList.killAllTypeOf<EntityBogie>()
+                val trainCount = loadedEntityList.killAllTypeOf<EntityTrainBase>()
+                val partsCount = loadedEntityList.killAllTypeOf<EntityVehiclePart>()
 
                 sender.sendMessage(
                     TextComponentString(
                         """
                             Deleted $trainCount train(s).
                             Deleted $formationCount formation(s).
-                            Deleted $entityCount entity(es) in total.
+                            Deleted ${bogieCount + partsCount} entity(es) in total.
                         """.trimIndent()
                     )
                 )
