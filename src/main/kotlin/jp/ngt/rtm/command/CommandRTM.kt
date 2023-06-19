@@ -46,8 +46,24 @@ class CommandRTM : CommandBase() {
         args: Array<out String>,
         pos: BlockPos?
     ): List<String> {
-        return listOf("delAllTrain", "delFormation", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
-            .filter { it.contains(args.first()) }
+        if (args.size == 1) return getListOfStringsMatchingLastWord(
+            args, listOf("delAllTrain", "delFormation", "howManyTrains", "door", "pan", "speed", "summon", "dismount")
+        )
+
+        if (args[0] == "summon") return when (args.size) {
+            in 4..6 -> getTabCompletionCoordinate(args, 3, pos)
+            3 -> getListOfStringsMatchingLastWord(
+                args, ModelPackManager.INSTANCE.smpModelSetMap
+                    .filter { it.key.name == "ModelTrain" }
+                    .flatMap { it.value.keys }
+            )
+            2 -> getListOfStringsMatchingLastWord(
+                args, listOf("ModelTrain:CC", "ModelTrain:TC", "ModelTrain:EC", "ModelTrain:Test", "ModelTrain:DC")
+            )
+            else -> emptyList()
+        }
+
+        return emptyList()
     }
 
     @Throws(CommandException::class)
@@ -131,33 +147,34 @@ class CommandRTM : CommandBase() {
                 }
             }
             "summon" -> {
-                val player = getCommandSenderAsPlayer(sender)
                 if (args.size <= 5) throw CommandException("fix-rtm.rtm.commands.rtm.summon.usage")
+
+                val player = getCommandSenderAsPlayer(sender)
                 val world = sender.entityWorld
-                val trainType = args[1]
-                val modelName = args[2]
-                val x = parseInt(args[3])
-                val y = parseInt(args[4])
-                val z = parseInt(args[5])
 
-                val cYaw = if (args.size >= 7) parseDouble(args[6]).toFloat() else 0.0F
-                val state = if (args.size >= 8) try { JsonToNBT.getTagFromJson(buildString(args, 7)) }
-                catch (e: NBTException) { throw CommandException("commands.summon.tagError", e.message) }
-                else NBTTagCompound()
+                val argTrainType = args[1]
+                val argModelName = args[2]
+                val argYaw = args.getOrNull(6)
+                val argState = args.getOrNull(7)
 
-                val (type, train) = when (trainType) {
+                val parsePos = parseBlockPos(sender, args, 3, false)
+                val x = parsePos.x
+                val y = parsePos.y
+                val z = parsePos.z
+
+                val (type, train) = when (argTrainType) {
                     "ModelTrain:CC" -> RTMResource.TRAIN_CC to EntityFreightCar(world, "dummy")
                     "ModelTrain:TC" -> RTMResource.TRAIN_TC to EntityTanker(world, "dummy")
                     "ModelTrain:EC" -> RTMResource.TRAIN_EC to EntityTrainElectricCar(world, "dummy")
                     "ModelTrain:Test" -> RTMResource.TRAIN_TEST to EntityTrainTest(world, "dummy")
                     "ModelTrain:DC" -> RTMResource.TRAIN_DC to EntityTrainDieselCar(world, "dummy")
-                    else -> throw CommandException("fix-rtm.rtm.commands.rtm.summon.no-type", trainType)
+                    else -> throw CommandException("fix-rtm.rtm.commands.rtm.summon.no-type", argTrainType)
                 }
 
-                val modelSet = ModelPackManager.INSTANCE.getResourceSet<ModelSetTrain>(type, modelName)
+                val modelSet = ModelPackManager.INSTANCE.getResourceSet<ModelSetTrain>(type, argModelName)
 
                 if (modelSet.isDummy || modelSet.config.subType != type.subType)
-                    throw CommandException("fix-rtm.rtm.commands.rtm.summon.model-not-found", modelName, trainType)
+                    throw CommandException("fix-rtm.rtm.commands.rtm.summon.model-not-found", argModelName, argTrainType)
 
                 val railMap = TileEntityLargeRailBase
                     .getRailMapFromCoordinates(world, player, x + .5, y + .5, z + .5)
@@ -167,13 +184,26 @@ class CommandRTM : CommandBase() {
                 if (!ItemTrain.checkObstacle(modelSet.config, player, world, x, y, z, railMap))
                     throw CommandException("commands.summon.failed")
 
-                val pr = ItemTrain.computePosRotation(railMap, x, z, cYaw)
+                val pr = ItemTrain.computePosRotation(railMap, x, z, argYaw?.toFloatOrNull() ?: 0.0F)
 
-                train.setPositionAndRotation(pr.posX, pr.posY, pr.posZ, pr.yaw, pr.pitch)
-                train.resourceState.readFromNBT(state)
-                train.resourceState.resourceName = modelName
-                train.spawnTrain(world)
-                train.updateResourceState()
+                val state = if (argState != null) {
+                    try {
+                        JsonToNBT.getTagFromJson(buildString(args, 7))
+                    } catch (e: NBTException) {
+                        throw CommandException("commands.summon.tagError", e.message)
+                    }
+                } else {
+                    NBTTagCompound()
+                }
+
+                train.apply {
+                    setPositionAndRotation(pr.posX, pr.posY, pr.posZ, pr.yaw, pr.pitch)
+                    resourceState.readFromNBT(state)
+                    resourceState.resourceName = argModelName
+                    spawnTrain(world)
+                    updateResourceState()
+                }
+
                 notifyCommandListener(sender, this, "commands.summon.success")
             }
             "dismount" -> {
