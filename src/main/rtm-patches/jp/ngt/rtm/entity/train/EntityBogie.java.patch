@@ -122,7 +122,7 @@
 -      }
 +         }
 +      }*/
-+      if (this.getTrain() == null) this.setDead();
++      if (this.getTrain() == null && !this.world.isRemote) this.setDead();
  
     }
  
