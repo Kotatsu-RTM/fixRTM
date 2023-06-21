@@ -5,6 +5,7 @@
 package jp.ngt.rtm.command
 
 import com.anatawa12.fixRtm.trimOneLine
+import jp.ngt.ngtlib.util.NGTUtil
 import jp.ngt.rtm.RTMResource
 import jp.ngt.rtm.entity.train.*
 import jp.ngt.rtm.entity.train.parts.EntityVehiclePart
@@ -52,11 +53,13 @@ class CommandRTM : CommandBase() {
 
         if (args[0] == "summon") return when (args.size) {
             in 4..6 -> getTabCompletionCoordinate(args, 3, pos)
-            3 -> getListOfStringsMatchingLastWord(
-                args, ModelPackManager.INSTANCE.smpModelSetMap
-                    .filter { it.key.name == "ModelTrain" }
-                    .flatMap { it.value.keys }
-            )
+            3 -> {
+                val packInstance = ModelPackManager.INSTANCE
+                val modelSetMap = if (NGTUtil.isSMP()) packInstance.smpModelSetMap else packInstance.allModelSetMap
+                getListOfStringsMatchingLastWord(
+                    args, modelSetMap.filter { it.key.name == "ModelTrain" }.flatMap { it.value.keys }
+                )
+            }
             2 -> getListOfStringsMatchingLastWord(
                 args, listOf("ModelTrain:CC", "ModelTrain:TC", "ModelTrain:EC", "ModelTrain:Test", "ModelTrain:DC")
             )
