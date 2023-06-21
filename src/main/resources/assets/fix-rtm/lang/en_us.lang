@@ -7,3 +7,5 @@ fix-rtm.rtm.commands.rtm.summon.usage=/rtm summon <trainType> <modelName> <x> <y
 fix-rtm.rtm.commands.rtm.summon.no-type=Type named %s not found.
 fix-rtm.rtm.commands.rtm.summon.model-not-found=Model named %1$s of %2$s not found.
 fix-rtm.rtm.commands.rtm.summon.rail-not-found=Rail not found at %s.
+
+fix-rtm.rtm.message.train.auto_concatenation_mode=Auto Concatenation Mode

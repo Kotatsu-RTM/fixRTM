@@ -19,9 +19,6 @@ import com.anatawa12.fixRtm.scripting.sai.ExecutedScriptCache
 import com.anatawa12.fixRtm.utils.ThreadLocalProperties
 import jp.ngt.ngtlib.NGTCore
 import jp.ngt.rtm.RTMCore
-import jp.ngt.rtm.RTMItem
-import jp.ngt.rtm.entity.train.EntityBogie
-import jp.ngt.rtm.entity.train.util.TrainState
 import net.minecraft.block.Block
 import net.minecraft.client.Minecraft
 import net.minecraft.client.resources.IReloadableResourceManager
@@ -37,7 +34,6 @@ import net.minecraft.util.text.TextFormatting
 import net.minecraftforge.client.event.ModelRegistryEvent
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.RegistryEvent
-import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.fml.client.registry.ClientRegistry
 import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.common.Mod
@@ -168,23 +164,6 @@ object FixRtm {
         ClientRegistry.registerTileEntity(TestTileEntity::class.java, "test", TestSPRenderer)
         DummyModelObject.init()
     }
-
-    @SubscribeEvent
-    fun onPlayerInteractToEntity(event: PlayerInteractEvent.EntityInteract) {
-        if (event.itemStack.item != RTMItem.crowbar) return
-        if (!event.entityPlayer.isSneaking) return
-        if (event.target !is EntityBogie) return
-
-        val target = event.target as EntityBogie
-        val train = target.train ?: return
-
-        train.trainDirection = target.bogieId.toInt()
-        train.setVehicleState(TrainState.TrainStateType.Role, 0)
-        train.setVehicleState(TrainState.TrainStateType.AutoLinking, 1)
-        train.concatenation(target, event.entityPlayer)
-        train.notch = 1
-    }
-
 
     fun registerGenerators() {
         Minecraft.getMinecraft().defaultResourcePacks.add(GeneratedResourcePack)

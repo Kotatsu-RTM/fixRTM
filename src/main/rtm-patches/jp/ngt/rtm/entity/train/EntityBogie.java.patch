@@ -167,7 +167,7 @@
        if (this.getTrain() != null) {
 +         if (player.world.isRemote)
 +            return true;
-+         if (player.isSneaking())
++         if (player.isSneaking() && player.getHeldItemMainhand().getItem() != RTMItem.crowbar)
 +            return this.getTrain().processInitialInteract(player, hand);
           if (PermissionManager.INSTANCE.hasPermission(player, "driveTrain")) {
              return this.getTrain().interactTrain(this, player);
