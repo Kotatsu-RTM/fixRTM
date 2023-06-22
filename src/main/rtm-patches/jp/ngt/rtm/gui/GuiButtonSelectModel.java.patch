@@ -60,7 +60,7 @@
 +         GL11.glScalef(f, f, f);
 +         float f1 = (afloat[4] - afloat[1]) * 0.5F;
 +         GL11.glTranslatef(0.0F, -f1, 0.0F);
-+         float f2 = (float)(System.currentTimeMillis() % 12000L) * 360.0F / 12000.0F;
++         float f2 = (float)(System.nanoTime() / 1000000L % 12000L) * 360.0F / 12000.0F;
 +         GL11.glRotatef(f2, 0.0F, 1.0F, 0.0F);
 +         this.modelSet.renderModelInGui(mc);
 +         this.postRenderModelInGui(mc);
