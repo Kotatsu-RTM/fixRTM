@@ -57,7 +57,7 @@
                 EntityTrainBase entitytrainbase = this.getTrain(itemstack, world);
                 entitytrainbase.setPositionAndRotation(d0, d1, d2, f1, f2);
                 entitytrainbase.getResourceState().readFromNBT(resourcestate.writeToNBT());
-@@ -96,20 +134,16 @@
+@@ -96,28 +134,24 @@
                    entitytrainbase1.getBogie(0).isActivated = true;
                    entitytrainbase1.getBogie(1).isActivated = true;
                    entitytrainbase1.setNotch(1);
@@ -80,6 +80,15 @@
        for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(player, new AxisAlignedBB((double)((float)x - f), (double)(y - 4), (double)((float)z - f), (double)((float)x + f + 1.0F), (double)(y + 8), (double)((float)z + f + 1.0F)))) {
           if (entity instanceof EntityTrainBase || entity instanceof EntityBogie || entity instanceof EntityVehiclePart) {
              double d0 = entity.getDistanceSq((double)x, (double)y, (double)z);
+             RailMap railmap = TileEntityLargeRailBase.getRailMapFromCoordinates(world, player, entity.posX, entity.posY, entity.posZ);
+             if (d0 < (double)(f * f) && rm0.equals(railmap)) {
+-               NGTLog.sendChatMessage(player, "message.train.obstacle", new Object[]{entity.toString()});
++               NGTLog.sendChatMessage(player, "message.train.obstacle", entity.getClass().getSimpleName());
+                return false;
+             }
+          }
+       }
+ 
 @@ -169,26 +203,27 @@
        default:
           return RTMResource.TRAIN_DC;
