@@ -1,6 +1,20 @@
 --- a/jp/ngt/rtm/gui/GuiIngameCustom.java
 +++ b/jp/ngt/rtm/gui/GuiIngameCustom.java
-@@ -191,12 +191,11 @@
+@@ -98,10 +98,13 @@
+       FontRenderer fontrenderer = this.mc.fontRenderer;
+       fontrenderer.drawStringWithShadow(String.valueOf(this.getSpeed(train)), (float)(i - 138), (float)(this.height - 11), 65280);
+       fontrenderer.drawStringWithShadow(String.valueOf(this.getBrake(train)), (float)(i - 178), (float)(this.height - 11), 65280);
+       fontrenderer.drawStringWithShadow(String.valueOf(this.getWorldTime()), (float)(i + 130), (float)(this.height - 40), 65280);
+       fontrenderer.drawStringWithShadow(this.getTime(), (float)(i + 130), (float)(this.height - 30), 65280);
++
++      int doorLampColor = train.doorMoveL + train.doorMoveR == 0 ? 0x00ffff : 0x505050;
++      fontrenderer.drawStringWithShadow("Door", (float)(i + 130), (float)(this.height - 20), doorLampColor);
+    }
+ 
+    private void renderTimeTable(EntityTrainBase train) {
+       String s = train.getResourceState().getName();
+       if (this.timeTable == null || !s.equals(this.timeTable.train)) {
+@@ -191,12 +194,11 @@
  
     public String getTime() {
        int i = this.getWorldTime();
@@ -14,7 +28,7 @@
     private void setScale(ScaledResolution par1) {
        this.width = par1.getScaledWidth();
        this.height = par1.getScaledHeight();
-@@ -210,11 +209,11 @@
+@@ -210,11 +212,11 @@
        float f1 = f * (float)train.brakeAirCount / 2880.0F;
        this.drawMeter(j, k, 32, 32, 48, f1, 512);
        float f2 = f * (float)this.getBrake(train) / 432.0F;
