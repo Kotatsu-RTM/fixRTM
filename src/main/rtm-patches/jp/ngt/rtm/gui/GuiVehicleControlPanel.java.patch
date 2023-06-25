@@ -41,7 +41,23 @@
                 this.dataValues[j] = k;
              }
           } else if (tab == TabTrainControlPanel.TAB_Formation) {
-@@ -205,10 +201,34 @@
+@@ -177,12 +173,14 @@
+                   }
+                }
+             }
+          }
+ 
++         int leftSwitchOffset = this.hasActivePotionEffects ? 208 : 84;
++
+          this.buttonDoor[0] = new GuiButtonDoor(300, this.guiLeft + this.xSize + 20, this.guiTop + 20, 64, 80);
+-         this.buttonDoor[1] = new GuiButtonDoor(301, this.guiLeft - 84, this.guiTop + 20, 64, 80);
++         this.buttonDoor[1] = new GuiButtonDoor(301, this.guiLeft - leftSwitchOffset, this.guiTop + 20, 64, 80);
+          int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Door);
+          boolean flag = (i2 & 1) == 1;
+          boolean flag1 = (i2 & 2) == 2;
+          boolean flag2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Direction) == 0;
+          this.buttonDoor[0].opened = flag2 ? flag1 : flag;
+@@ -205,10 +203,34 @@
           GL11.glDisable(3042);
        }
  
@@ -76,7 +92,7 @@
           int i = mouseX - this.guiLeft;
           int j = mouseY - this.guiTop;
           TabTrainControlPanel[] atabtraincontrolpanel = TabTrainControlPanel.tabArray;
-@@ -463,17 +483,11 @@
+@@ -463,17 +485,11 @@
        }
  
        if (button.id >= 110 && button.id <= 115 || button.id >= 124 && button.id <= 129 || button.id >= 140 && button.id <= 142) {
@@ -95,7 +111,7 @@
              if (i < 0) {
                 i = this.modelset.getConfig().rollsignNames.length - 1;
              }
-@@ -504,11 +518,12 @@
+@@ -504,11 +520,12 @@
  
              if (button.id == 129) {
                 int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement);
@@ -109,7 +125,7 @@
                 return;
              }
  
-@@ -533,22 +548,18 @@
+@@ -533,22 +550,18 @@
              }
           }
  
@@ -137,7 +153,7 @@
  
        if (button.id == 300 || button.id == 301) {
           ((GuiButtonDoor)button).opened ^= true;
-@@ -608,14 +619,11 @@
+@@ -608,14 +621,11 @@
     private void onCustomButtonClick(int index, int val) {
        this.vehicle.getResourceState().getDataMap().setInt("Button" + index, val, 3);
     }
