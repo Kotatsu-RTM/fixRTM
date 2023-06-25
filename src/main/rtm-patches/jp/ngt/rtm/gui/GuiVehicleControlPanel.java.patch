@@ -12,7 +12,7 @@
     private GuiButton[] buttonDirection = new GuiButton[3];
     private GuiButtonDoor[] buttonDoor = new GuiButtonDoor[2];
     private int[] dataValues;
-@@ -115,25 +114,23 @@
+@@ -115,25 +114,24 @@
                 if (j2 == j1) {
                    this.buttonDirection[j2].enabled = false;
                 }
@@ -24,6 +24,7 @@
 -            this.buttonList.add(new GuiButton(111, this.guiLeft + 152, this.guiTop + 52, 20, 20, ">"));
              if (this.modelset.getConfig().rollsignNames != null) {
                 this.buttonDestination = new GuiButton(128, this.guiLeft + 28, this.guiTop + 76, 120, 20, this.getFormattedText(TrainState.TrainStateType.Destination, this.vehicle.getVehicleState(TrainState.TrainStateType.Destination)));
++               this.buttonDestination.enabled = false;
                 this.buttonList.add(this.buttonDestination);
                 this.buttonList.add(new GuiButton(112, this.guiLeft + 4, this.guiTop + 76, 20, 20, "<"));
                 this.buttonList.add(new GuiButton(113, this.guiLeft + 152, this.guiTop + 76, 20, 20, ">"));
@@ -44,7 +45,7 @@
  
              for(int k1 = 0; k1 < 9; ++k1) {
                 Slot slot1 = new Slot(this.player.inventory, k1, 8 + k1 * 18, 142);
-@@ -148,11 +145,12 @@
+@@ -148,11 +146,12 @@
  
              for(int j = 0; j < astring.length; ++j) {
                 int k = this.vehicle.getResourceState().getDataMap().getInt("Button" + j);
@@ -58,7 +59,7 @@
                 this.dataValues[j] = k;
              }
           } else if (tab == TabTrainControlPanel.TAB_Formation) {
-@@ -177,12 +175,14 @@
+@@ -177,12 +176,14 @@
                    }
                 }
              }
@@ -74,7 +75,7 @@
           boolean flag1 = (i2 & 2) == 2;
           boolean flag2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Direction) == 0;
           this.buttonDoor[0].opened = flag2 ? flag1 : flag;
-@@ -198,15 +198,39 @@
+@@ -198,17 +199,41 @@
        String s = "setTrainTab," + tabIndex;
        RTMCore.NETWORK_WRAPPER.sendToServer(new PacketNotice((byte)0, s, this.player));
     }
@@ -84,10 +85,11 @@
 +      /*TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
        if (tabtraincontrolpanel != null) {
           GL11.glDisable(3042);
+-      }
 +      }*/
-+
-+   }
-+
+ 
+    }
+ 
 +   @Override
 +   protected void keyTyped(char typedChar, int keyCode) throws IOException {
 +      super.keyTyped(typedChar, keyCode);
@@ -109,14 +111,15 @@
 +                  .forEach(train -> train.getResourceState().getDataMap().setInt("Button" + index, val, 3));
 +               button.playPressSound(this.mc.getSoundHandler());
 +            });
-       }
--
-    }
- 
++      }
++   }
++
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
        if (mouseButton == 0) {
           int i = mouseX - this.guiLeft;
-@@ -463,17 +487,11 @@
+          int j = mouseY - this.guiTop;
+          TabTrainControlPanel[] atabtraincontrolpanel = TabTrainControlPanel.tabArray;
+@@ -463,17 +488,11 @@
        }
  
        if (button.id >= 110 && button.id <= 115 || button.id >= 124 && button.id <= 129 || button.id >= 140 && button.id <= 142) {
@@ -135,7 +138,7 @@
              if (i < 0) {
                 i = this.modelset.getConfig().rollsignNames.length - 1;
              }
-@@ -504,11 +522,12 @@
+@@ -504,11 +523,12 @@
  
              if (button.id == 129) {
                 int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement);
@@ -149,7 +152,7 @@
                 return;
              }
  
-@@ -533,22 +552,18 @@
+@@ -533,22 +553,18 @@
              }
           }
  
@@ -177,7 +180,7 @@
  
        if (button.id == 300 || button.id == 301) {
           ((GuiButtonDoor)button).opened ^= true;
-@@ -608,14 +623,11 @@
+@@ -608,14 +624,11 @@
     private void onCustomButtonClick(int index, int val) {
        this.vehicle.getResourceState().getDataMap().setInt("Button" + index, val, 3);
     }
