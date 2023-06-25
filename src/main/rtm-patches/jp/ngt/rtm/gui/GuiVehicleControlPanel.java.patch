@@ -12,7 +12,7 @@
     private GuiButton[] buttonDirection = new GuiButton[3];
     private GuiButtonDoor[] buttonDoor = new GuiButtonDoor[2];
     private int[] dataValues;
-@@ -115,14 +114,10 @@
+@@ -115,25 +114,23 @@
                 if (j2 == j1) {
                    this.buttonDirection[j2].enabled = false;
                 }
@@ -27,7 +27,24 @@
                 this.buttonList.add(this.buttonDestination);
                 this.buttonList.add(new GuiButton(112, this.guiLeft + 4, this.guiTop + 76, 20, 20, "<"));
                 this.buttonList.add(new GuiButton(113, this.guiLeft + 152, this.guiTop + 76, 20, 20, ">"));
-@@ -148,11 +143,12 @@
+             }
+ 
+-            this.buttonAnnouncement = new GuiButton(129, this.guiLeft + 28, this.guiTop + 100, 120, 20, this.getFormattedText(TrainState.TrainStateType.Announcement, this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement)));
+-            this.buttonList.add(this.buttonAnnouncement);
+-            this.buttonList.add(new GuiButton(114, this.guiLeft + 4, this.guiTop + 100, 20, 20, "<"));
+-            this.buttonList.add(new GuiButton(115, this.guiLeft + 152, this.guiTop + 100, 20, 20, ">"));
++            if (this.modelset.getConfig().sound_Announcement != null) {
++               this.buttonAnnouncement = new GuiButton(129, this.guiLeft + 28, this.guiTop + 100, 120, 20, this.getFormattedText(TrainState.TrainStateType.Announcement, this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement)));
++               this.buttonList.add(this.buttonAnnouncement);
++               this.buttonList.add(new GuiButton(114, this.guiLeft + 4, this.guiTop + 100, 20, 20, "<"));
++               this.buttonList.add(new GuiButton(115, this.guiLeft + 152, this.guiTop + 100, 20, 20, ">"));
++            }
+          } else if (tab == TabTrainControlPanel.TAB_Function) {
+             containertraincontrolpanel.inventorySlots = new ArrayList();
+ 
+             for(int k1 = 0; k1 < 9; ++k1) {
+                Slot slot1 = new Slot(this.player.inventory, k1, 8 + k1 * 18, 142);
+@@ -148,11 +145,12 @@
  
              for(int j = 0; j < astring.length; ++j) {
                 int k = this.vehicle.getResourceState().getDataMap().getInt("Button" + j);
@@ -41,7 +58,7 @@
                 this.dataValues[j] = k;
              }
           } else if (tab == TabTrainControlPanel.TAB_Formation) {
-@@ -177,12 +173,14 @@
+@@ -177,12 +175,14 @@
                    }
                 }
              }
@@ -57,7 +74,7 @@
           boolean flag1 = (i2 & 2) == 2;
           boolean flag2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Direction) == 0;
           this.buttonDoor[0].opened = flag2 ? flag1 : flag;
-@@ -198,15 +196,39 @@
+@@ -198,15 +198,39 @@
        String s = "setTrainTab," + tabIndex;
        RTMCore.NETWORK_WRAPPER.sendToServer(new PacketNotice((byte)0, s, this.player));
     }
@@ -99,7 +116,7 @@
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
        if (mouseButton == 0) {
           int i = mouseX - this.guiLeft;
-@@ -463,17 +485,11 @@
+@@ -463,17 +487,11 @@
        }
  
        if (button.id >= 110 && button.id <= 115 || button.id >= 124 && button.id <= 129 || button.id >= 140 && button.id <= 142) {
@@ -118,7 +135,7 @@
              if (i < 0) {
                 i = this.modelset.getConfig().rollsignNames.length - 1;
              }
-@@ -504,11 +520,12 @@
+@@ -504,11 +522,12 @@
  
              if (button.id == 129) {
                 int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement);
@@ -132,7 +149,7 @@
                 return;
              }
  
-@@ -533,22 +550,18 @@
+@@ -533,22 +552,18 @@
              }
           }
  
@@ -160,7 +177,7 @@
  
        if (button.id == 300 || button.id == 301) {
           ((GuiButtonDoor)button).opened ^= true;
-@@ -608,14 +621,11 @@
+@@ -608,14 +623,11 @@
     private void onCustomButtonClick(int index, int val) {
        this.vehicle.getResourceState().getDataMap().setInt("Button" + index, val, 3);
     }
