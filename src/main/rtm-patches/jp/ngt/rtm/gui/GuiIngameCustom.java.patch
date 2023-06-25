@@ -1,6 +1,20 @@
 --- a/jp/ngt/rtm/gui/GuiIngameCustom.java
 +++ b/jp/ngt/rtm/gui/GuiIngameCustom.java
-@@ -210,11 +210,11 @@
+@@ -191,12 +191,11 @@
+ 
+    public String getTime() {
+       int i = this.getWorldTime();
+       int j = (i / 1000 + 6) % 24;
+       int k = (int)((float)(i % 1000) * 0.06F);
+-      StringBuilder stringbuilder = (new StringBuilder(String.valueOf(j))).append(":").append(k);
+-      return stringbuilder.toString();
++      return String.format("%02d:%02d", j, k);
+    }
+ 
+    private void setScale(ScaledResolution par1) {
+       this.width = par1.getScaledWidth();
+       this.height = par1.getScaledHeight();
+@@ -210,11 +209,11 @@
        float f1 = f * (float)train.brakeAirCount / 2880.0F;
        this.drawMeter(j, k, 32, 32, 48, f1, 512);
        float f2 = f * (float)this.getBrake(train) / 432.0F;
