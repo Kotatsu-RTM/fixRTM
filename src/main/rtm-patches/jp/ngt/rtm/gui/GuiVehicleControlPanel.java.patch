@@ -57,12 +57,20 @@
           boolean flag1 = (i2 & 2) == 2;
           boolean flag2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Direction) == 0;
           this.buttonDoor[0].opened = flag2 ? flag1 : flag;
-@@ -205,10 +203,34 @@
-          GL11.glDisable(3042);
-       }
- 
+@@ -198,15 +196,39 @@
+       String s = "setTrainTab," + tabIndex;
+       RTMCore.NETWORK_WRAPPER.sendToServer(new PacketNotice((byte)0, s, this.player));
     }
  
+    protected void drawGuiContainerForegroundLayer(int p_146979_1_, int p_146979_2_) {
+-      TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
++      /*TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
+       if (tabtraincontrolpanel != null) {
+          GL11.glDisable(3042);
++      }*/
++
++   }
++
 +   @Override
 +   protected void keyTyped(char typedChar, int keyCode) throws IOException {
 +      super.keyTyped(typedChar, keyCode);
@@ -84,14 +92,13 @@
 +                  .forEach(train -> train.getResourceState().getDataMap().setInt("Button" + index, val, 3));
 +               button.playPressSound(this.mc.getSoundHandler());
 +            });
-+      }
-+   }
-+
+       }
+-
+    }
+ 
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
        if (mouseButton == 0) {
           int i = mouseX - this.guiLeft;
-          int j = mouseY - this.guiTop;
-          TabTrainControlPanel[] atabtraincontrolpanel = TabTrainControlPanel.tabArray;
 @@ -463,17 +485,11 @@
        }
  
