@@ -31,7 +31,7 @@
              int i = 0;
              if (frontBogie != null && this.prevPosIndex != -1) {
 -               int j = (int)((speed + 0.25F) * 32.0F);
-+               int j = (int)(Math.abs(speed) + 0.25F * SPLITS_PER_METER);
++               int j = (int)((Math.abs(speed) + 0.25F) * SPLITS_PER_METER);
                 int k = this.prevPosIndex - j;
                 int l = this.prevPosIndex + j;
                 int i1 = k < 0 ? 0 : k;
