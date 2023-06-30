@@ -12,20 +12,32 @@
  import jp.ngt.ngtlib.math.Vec3;
  import jp.ngt.ngtlib.protection.Lockable;
  import jp.ngt.ngtlib.util.PermissionManager;
-@@ -126,11 +129,11 @@
+@@ -44,10 +47,11 @@
+    private TileEntityLargeRailCore currentRailObj;
+    private RailMap currentRailMap;
+    private final double[] posBuf = new double[3];
+    private final float[] rotationBuf = new float[4];
+    private int split = -1;
++   private static final int SPLITS_PER_METER = 360; //(Minimum Speed[km/h] / 3.6 / 20[tick])^-1 e.g. (0.2/3.6/20)^-1 = 360
+    private int prevPosIndex;
+    private float jointDelay;
+    private boolean reverbSound;
+    private int jointIndex;
+    private int existCount;
+@@ -126,11 +130,11 @@
              return BogieController.MotionState.FLY;
           } else {
              RailMap railmap = this.currentRailMap;
              int i = 0;
              if (frontBogie != null && this.prevPosIndex != -1) {
 -               int j = (int)((speed + 0.25F) * 32.0F);
-+               int j = (int)((Math.abs(speed) + 0.25F) * 32.0F);
++               int j = (int)(Math.abs(speed) + 0.25F * SPLITS_PER_METER);
                 int k = this.prevPosIndex - j;
                 int l = this.prevPosIndex + j;
                 int i1 = k < 0 ? 0 : k;
                 int j1 = l > this.split ? this.split : l;
                 double[] adouble = frontBogie.getPosBuf();
-@@ -171,11 +174,11 @@
+@@ -171,11 +175,11 @@
                 this.rotationBuf[0] = f2;
                 this.rotationBuf[1] = f3;
                 this.rotationBuf[2] = f1;
@@ -38,7 +50,7 @@
                    }
                 }
  
-@@ -196,18 +199,20 @@
+@@ -196,19 +200,21 @@
        TileEntityLargeRailCore tileentitylargerailcore = this.getRail(px, py, pz);
        if (tileentitylargerailcore == null) {
           return false;
@@ -55,14 +67,16 @@
 +               railMap = tileentitylargerailcore.getRailMap(this);
              }
  
+-            this.split = (int)(this.currentRailMap.getLength() * 32.0D);
 +            this.currentRailObj = tileentitylargerailcore;
 +            this.currentRailMap = railMap;
-             this.split = (int)(this.currentRailMap.getLength() * 32.0D);
++            this.split = (int)(this.currentRailMap.getLength() * SPLITS_PER_METER);
              this.prevPosIndex = -1;
              this.onChangeRail(tileentitylargerailcore);
           }
  
-@@ -227,14 +232,17 @@
+          return true;
+@@ -227,14 +233,17 @@
        return null;
     }
  
@@ -84,7 +98,7 @@
     }
  
     protected boolean reverseJointArray() {
-@@ -245,13 +253,13 @@
+@@ -245,13 +254,13 @@
  
     protected void playJointSound() {
        EntityTrainBase entitytrainbase = this.getTrain();
@@ -100,7 +114,7 @@
              int j = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
              ++this.jointIndex;
              int k = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
-@@ -287,15 +295,25 @@
+@@ -287,15 +296,25 @@
  
     public final void onUpdate() {
        if (!this.world.isRemote && !this.tracked) {
@@ -128,7 +142,7 @@
  
     public void onBogieUpdate() {
        super.onUpdate();
-@@ -308,12 +326,11 @@
+@@ -308,12 +327,11 @@
        }
  
     }
@@ -142,7 +156,7 @@
  
     }
  
-@@ -349,13 +366,14 @@
+@@ -349,13 +367,14 @@
  
     public boolean attackEntityFrom(DamageSource par1, float par2) {
        if (this.getTrain() != null && !this.getTrain().isDead) {
@@ -159,7 +173,7 @@
        }
     }
  
-@@ -491,10 +509,14 @@
+@@ -491,10 +510,14 @@
     public void addVelocity(double par1, double par3, double par5) {
     }
  
@@ -174,7 +188,7 @@
           }
        } else if (player.inventory.getCurrentItem() != null && player.inventory.getCurrentItem().getItem() == RTMItem.paddle) {
           return true;
-@@ -578,6 +600,25 @@
+@@ -578,6 +601,25 @@
     }
  
     public int getProhibitedAction() {
