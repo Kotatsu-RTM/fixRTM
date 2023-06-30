@@ -12,7 +12,7 @@
     private GuiButton[] buttonDirection = new GuiButton[3];
     private GuiButtonDoor[] buttonDoor = new GuiButtonDoor[2];
     private int[] dataValues;
-@@ -115,14 +114,10 @@
+@@ -115,25 +114,24 @@
                 if (j2 == j1) {
                    this.buttonDirection[j2].enabled = false;
                 }
@@ -24,10 +24,28 @@
 -            this.buttonList.add(new GuiButton(111, this.guiLeft + 152, this.guiTop + 52, 20, 20, ">"));
              if (this.modelset.getConfig().rollsignNames != null) {
                 this.buttonDestination = new GuiButton(128, this.guiLeft + 28, this.guiTop + 76, 120, 20, this.getFormattedText(TrainState.TrainStateType.Destination, this.vehicle.getVehicleState(TrainState.TrainStateType.Destination)));
++               this.buttonDestination.enabled = false;
                 this.buttonList.add(this.buttonDestination);
                 this.buttonList.add(new GuiButton(112, this.guiLeft + 4, this.guiTop + 76, 20, 20, "<"));
                 this.buttonList.add(new GuiButton(113, this.guiLeft + 152, this.guiTop + 76, 20, 20, ">"));
-@@ -148,11 +143,12 @@
+             }
+ 
+-            this.buttonAnnouncement = new GuiButton(129, this.guiLeft + 28, this.guiTop + 100, 120, 20, this.getFormattedText(TrainState.TrainStateType.Announcement, this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement)));
+-            this.buttonList.add(this.buttonAnnouncement);
+-            this.buttonList.add(new GuiButton(114, this.guiLeft + 4, this.guiTop + 100, 20, 20, "<"));
+-            this.buttonList.add(new GuiButton(115, this.guiLeft + 152, this.guiTop + 100, 20, 20, ">"));
++            if (this.modelset.getConfig().sound_Announcement != null) {
++               this.buttonAnnouncement = new GuiButton(129, this.guiLeft + 28, this.guiTop + 100, 120, 20, this.getFormattedText(TrainState.TrainStateType.Announcement, this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement)));
++               this.buttonList.add(this.buttonAnnouncement);
++               this.buttonList.add(new GuiButton(114, this.guiLeft + 4, this.guiTop + 100, 20, 20, "<"));
++               this.buttonList.add(new GuiButton(115, this.guiLeft + 152, this.guiTop + 100, 20, 20, ">"));
++            }
+          } else if (tab == TabTrainControlPanel.TAB_Function) {
+             containertraincontrolpanel.inventorySlots = new ArrayList();
+ 
+             for(int k1 = 0; k1 < 9; ++k1) {
+                Slot slot1 = new Slot(this.player.inventory, k1, 8 + k1 * 18, 142);
+@@ -148,11 +146,12 @@
  
              for(int j = 0; j < astring.length; ++j) {
                 int k = this.vehicle.getResourceState().getDataMap().getInt("Button" + j);
@@ -41,9 +59,34 @@
                 this.dataValues[j] = k;
              }
           } else if (tab == TabTrainControlPanel.TAB_Formation) {
-@@ -205,10 +201,34 @@
+@@ -177,12 +176,14 @@
+                   }
+                }
+             }
+          }
+ 
++         int leftSwitchOffset = this.hasActivePotionEffects ? 208 : 84;
++
+          this.buttonDoor[0] = new GuiButtonDoor(300, this.guiLeft + this.xSize + 20, this.guiTop + 20, 64, 80);
+-         this.buttonDoor[1] = new GuiButtonDoor(301, this.guiLeft - 84, this.guiTop + 20, 64, 80);
++         this.buttonDoor[1] = new GuiButtonDoor(301, this.guiLeft - leftSwitchOffset, this.guiTop + 20, 64, 80);
+          int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Door);
+          boolean flag = (i2 & 1) == 1;
+          boolean flag1 = (i2 & 2) == 2;
+          boolean flag2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Direction) == 0;
+          this.buttonDoor[0].opened = flag2 ? flag1 : flag;
+@@ -198,17 +199,41 @@
+       String s = "setTrainTab," + tabIndex;
+       RTMCore.NETWORK_WRAPPER.sendToServer(new PacketNotice((byte)0, s, this.player));
+    }
+ 
+    protected void drawGuiContainerForegroundLayer(int p_146979_1_, int p_146979_2_) {
+-      TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
++      /*TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
+       if (tabtraincontrolpanel != null) {
           GL11.glDisable(3042);
-       }
+-      }
++      }*/
  
     }
  
@@ -76,7 +119,7 @@
           int i = mouseX - this.guiLeft;
           int j = mouseY - this.guiTop;
           TabTrainControlPanel[] atabtraincontrolpanel = TabTrainControlPanel.tabArray;
-@@ -463,17 +483,11 @@
+@@ -463,17 +488,11 @@
        }
  
        if (button.id >= 110 && button.id <= 115 || button.id >= 124 && button.id <= 129 || button.id >= 140 && button.id <= 142) {
@@ -95,7 +138,7 @@
              if (i < 0) {
                 i = this.modelset.getConfig().rollsignNames.length - 1;
              }
-@@ -504,11 +518,12 @@
+@@ -504,11 +523,12 @@
  
              if (button.id == 129) {
                 int i2 = this.vehicle.getVehicleState(TrainState.TrainStateType.Announcement);
@@ -109,7 +152,7 @@
                 return;
              }
  
-@@ -533,22 +548,18 @@
+@@ -533,22 +553,18 @@
              }
           }
  
@@ -137,7 +180,7 @@
  
        if (button.id == 300 || button.id == 301) {
           ((GuiButtonDoor)button).opened ^= true;
-@@ -608,14 +619,11 @@
+@@ -608,14 +624,11 @@
     private void onCustomButtonClick(int index, int val) {
        this.vehicle.getResourceState().getDataMap().setInt("Button" + index, val, 3);
     }

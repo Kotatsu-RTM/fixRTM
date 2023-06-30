@@ -18,3 +18,15 @@
        if (this.getDiagram() != null) {
           NBTTagCompound nbttagcompound = new NBTTagCompound();
           ItemStack itemstack = this.getDiagram();
+@@ -139,6 +146,11 @@
+    }
+ 
+    public boolean isMotorman() {
+       return true;
+    }
++
++   @Override
++   public double getYOffset() {
++      return -0.35D;
++   }
+ }

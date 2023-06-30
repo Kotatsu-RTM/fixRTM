@@ -312,7 +312,30 @@
              NGTLog.sendChatMessage(player, "message.train.deconcatenation", new Object[0]);
           }
        }
-@@ -593,15 +567,14 @@
+@@ -583,25 +557,36 @@
+ 
+    protected void mountMotorman(EntityBogie bogie, EntityPlayer player, ItemStack stack) {
+       int i = bogie.getBogieId();
+       if (i >= 0) {
+          EntityMotorman entitymotorman = new EntityMotorman(this.world, player);
+-         entitymotorman.setLocationAndAngles(this.posX, this.posY, this.posZ, 0.0F, 0.0F);
++
++         Vec3 vec3 = this.getRiderPos(entitymotorman)
++            .rotateAroundZ(-this.rotationRoll)
++            .rotateAroundX(this.rotationPitch)
++            .rotateAroundY(this.rotationYaw);
++         double posX = this.posX + vec3.getX();
++         double posY = this.posY + vec3.getY();
++         double posZ = this.posZ + vec3.getZ();
++
++         float yaw = (float) Math.toDegrees(Math.atan2(-(bogie.posX - this.posX), bogie.posZ - this.posZ));
++
++         entitymotorman.setPositionAndRotation(posX, posY, posZ, yaw, 0.0F);
++
+          if (this.world.spawnEntity(entitymotorman)) {
+             this.mountEntityToTrain(entitymotorman, i);
+             stack.shrink(1);
+          }
        }
  
     }
@@ -330,7 +353,7 @@
  
     protected void removePassengerFromVehicle(Entity passenger) {
        Entity entity = this.getBogie(this.getTrainDirection());
-@@ -655,11 +628,11 @@
+@@ -655,11 +640,11 @@
        if (!this.world.isRemote && par2.getTrain() != null) {
           int i = par1.getBogieId();
           int j = par2.getBogieId();
@@ -343,7 +366,7 @@
                 entityplayer = (EntityPlayer)this.getFirstPassenger();
              } else if (par2.getTrain().getFirstPassenger() instanceof EntityPlayer) {
                 entityplayer = (EntityPlayer)par2.getTrain().getFirstPassenger();
-@@ -672,38 +645,38 @@
+@@ -672,38 +657,38 @@
        }
  
     }
@@ -387,7 +410,7 @@
     public boolean existBogies() {
        return this.getBogie(0) != null && this.getBogie(1) != null;
     }
-@@ -760,10 +733,11 @@
+@@ -760,10 +745,11 @@
     public int getTrainDirection() {
        return this.getVehicleState(TrainState.TrainStateType.Direction);
     }
@@ -399,7 +422,7 @@
        } else {
           this.formation.setTrainDirection((byte)par1, this);
        }
-@@ -793,33 +767,46 @@
+@@ -793,33 +779,46 @@
     public boolean addNotch(Entity driver, int par2) {
        if (par2 != 0) {
           int i = this.getNotch();
@@ -451,7 +474,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +861,31 @@
+@@ -874,81 +873,31 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
@@ -478,14 +501,9 @@
 -         ForgeChunkManager.releaseTicket(this.ticket);
 -         this.ticket = null;
 -      }
-+   public boolean getAutoLinkingState() {
-+      return autoLinkingState;
-+   }
- 
-+   public void setAutoLinkingState(boolean state) {
-+      autoLinkingState = state;
-    }
- 
+-
+-   }
+-
 -   private boolean requestTicket() {
 -      Ticket ticket = RTMChunkManager.INSTANCE.getNewTicket(this.world, Type.ENTITY);
 -      if (ticket != null) {
@@ -500,30 +518,31 @@
 -         return false;
 -      }
 -   }
-+   private void updateAutoLinkingState() {
-+      if (!autoLinkingState) return;
- 
+-
 -   public void setChunkTicket(Ticket par1) {
 -      if (this.ticket != par1) {
 -         ForgeChunkManager.releaseTicket(this.ticket);
-+      if (getNotch() != 1) {
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-+         return;
-       }
- 
--      this.ticket = par1;
--   }
+-      }
 -
+-      this.ticket = par1;
++   public boolean getAutoLinkingState() {
++      return autoLinkingState;
+    }
+ 
 -   public void forceChunkLoading() {
 -      this.forceChunkLoading(this.chunkCoordX, this.chunkCoordZ);
--   }
--
++   public void setAutoLinkingState(boolean state) {
++      autoLinkingState = state;
+    }
+ 
 -   public void forceChunkLoading(int x, int z) {
 -      if (!this.world.isRemote) {
 -         if (this.ticket == null && !this.requestTicket()) {
 -            return;
 -         }
--
++   private void updateAutoLinkingState() {
++      if (!autoLinkingState) return;
+ 
 -         if (x != this.prevChunkCoordX || z != this.prevChunkCoordZ) {
 -            this.setupChunks(x, z);
 -         }
@@ -531,7 +550,11 @@
 -         for(ChunkPos chunkpos : this.loadedChunks) {
 -            ForgeChunkManager.forceChunk(this.ticket, chunkpos);
 -         }
--
++      if (getNotch() != 1) {
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++         return;
++      }
+ 
 -         ChunkPos chunkpos1 = new ChunkPos(x, z);
 -         ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
 +      if (getSpeed() > 15.0F / 72) {
