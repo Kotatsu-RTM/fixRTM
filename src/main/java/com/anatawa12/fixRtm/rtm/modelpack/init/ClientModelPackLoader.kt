@@ -29,6 +29,7 @@ object ClientModelPackLoader {
         constructModels()
         loadButtonTextures()
         cleanup()
+        ModelPackManager.INSTANCE.setupPacketData()
     }
 
     private fun loadModels() {
