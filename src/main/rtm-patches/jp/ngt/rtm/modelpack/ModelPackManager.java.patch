@@ -75,7 +75,7 @@
     }
  
     public void load(ModelPackLoadThread par1) {
-@@ -114,14 +114,48 @@
+@@ -114,18 +114,56 @@
        for(File file2 : list2) {
           ++i;
           String s1 = file2.getName();
@@ -87,6 +87,13 @@
  
        TimeTableManager.INSTANCE.load();
 +
++      setupPacketData();
++
+       par1.loadFinished = true;
+       this.modelLoaded = true;
+    }
+ 
++   public void setupPacketData() {
 +      final AtomicInteger bytes = new AtomicInteger();
 +
 +      allModelSetMap.forEach((type, resourceSets) -> {
@@ -118,13 +125,14 @@
 +      buffer.rewind();
 +      byteArrayToSendToClient = new byte[buffer.remaining()];
 +      buffer.get(byteArrayToSendToClient);
++   }
 +
-       par1.loadFinished = true;
-       this.modelLoaded = true;
-    }
- 
     public void registerType(ResourceType type) {
-@@ -143,49 +177,46 @@
+       boolean flag = type.hasSubType && type.subType != null;
+       if (flag) {
+          ResourceSet resourceset = this.getNewModelSet(type, new Class[0]);
+          this.dummyMap.put(type.subType, resourceset);
+@@ -143,49 +181,46 @@
     public ResourceType getType(String name) {
        return this.typeMap.get(name);
     }
@@ -193,7 +201,7 @@
     public void addModelSetName(int count, String typeName, String name) {
        assert NGTUtil.isSMP() && !NGTUtil.isServer();
  
-@@ -227,16 +258,13 @@
+@@ -227,16 +262,13 @@
           resourcetype = type.parent;
        }
  
