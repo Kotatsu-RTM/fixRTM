@@ -82,6 +82,15 @@
     }
  
     private void searchOtherMarkers() {
+-      ((BlockMarker)this.getBlockType()).makeRailMap(this, this.getX(), this.getY(), this.getZ());
++      int entityId = net.minecraft.client.Minecraft.getMinecraft().player.getEntityId();
++
++      ((BlockMarker)this.getBlockType()).makeRailMap(this, entityId, this.getX(), this.getY(), this.getZ());
+    }
+ 
+    private void updateStartPos() {
+       if (this.startPos != null) {
+          TileEntity tileentity = this.getWorld().getTileEntity(this.startPos);
 @@ -139,11 +170,11 @@
  
           for(int i = 0; i < arailmap.length; ++i) {
