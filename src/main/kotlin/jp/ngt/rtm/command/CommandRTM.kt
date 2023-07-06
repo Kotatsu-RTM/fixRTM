@@ -38,8 +38,11 @@ class CommandRTM : CommandBase() {
         .asSequence()
         .filterIsInstance<T>()
         .filterNot { it.isDead }
-        .onEach { it.setDead() }
-        .count()
+        .let {
+            val count = it.count()
+            it.onEach(Entity::setDead)
+            count
+        }
 
     override fun getTabCompletions(
         server: MinecraftServer,
