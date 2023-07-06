@@ -19,6 +19,8 @@ import com.anatawa12.fixRtm.scripting.sai.ExecutedScriptCache
 import com.anatawa12.fixRtm.utils.ThreadLocalProperties
 import jp.ngt.ngtlib.NGTCore
 import jp.ngt.rtm.RTMCore
+import jp.ngt.rtm.RTMItem
+import jp.ngt.rtm.rail.TileEntityLargeRailBase
 import net.minecraft.block.Block
 import net.minecraft.client.Minecraft
 import net.minecraft.client.resources.IReloadableResourceManager
@@ -34,6 +36,7 @@ import net.minecraft.util.text.TextFormatting
 import net.minecraftforge.client.event.ModelRegistryEvent
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.RegistryEvent
+import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.fml.client.registry.ClientRegistry
 import net.minecraftforge.fml.common.FMLCommonHandler
 import net.minecraftforge.fml.common.Mod
@@ -216,6 +219,15 @@ object FixRtm {
         }
     }
 
+    @SubscribeEvent
+    fun onBreakBlock(event: PlayerInteractEvent.LeftClickBlock) {
+        //val block = event.world.getBlockState(event.pos).block
+        val tileEntity = event.world.getTileEntity(event.pos)
+        val item = event.entityPlayer.heldItemMainhand.item
+
+        if (tileEntity is TileEntityLargeRailBase && item != RTMItem.itemLargeRail && event.isCancelable)
+            event.isCanceled = true
+    }
 
     @Mod.InstanceFactory
     @JvmStatic
