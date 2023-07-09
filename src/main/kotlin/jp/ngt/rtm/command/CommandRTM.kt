@@ -40,7 +40,7 @@ class CommandRTM : CommandBase() {
         .filterNot { it.isDead }
         .let {
             val count = it.count()
-            it.onEach(Entity::setDead)
+            it.forEach(Entity::setDead)
             count
         }
 
