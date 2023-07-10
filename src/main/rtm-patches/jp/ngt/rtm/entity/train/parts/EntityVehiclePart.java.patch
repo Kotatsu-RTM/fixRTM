@@ -1,6 +1,18 @@
 --- a/jp/ngt/rtm/entity/train/parts/EntityVehiclePart.java
 +++ b/jp/ngt/rtm/entity/train/parts/EntityVehiclePart.java
-@@ -167,11 +167,11 @@
+@@ -21,11 +21,10 @@
+ 
+ public abstract class EntityVehiclePart extends EntityCustom {
+    private static final DataParameter<Integer> TRAIN_ID = EntityDataManager.createKey(EntityVehiclePart.class, DataSerializers.VARINT);
+    private static final DataParameter<Rotations> POS = EntityDataManager.createKey(EntityVehiclePart.class, DataSerializers.ROTATIONS);
+    protected boolean isIndependent;
+-   private EntityVehicleBase parent;
+    private UUID unloadedParent;
+    public boolean needsUpdatePos;
+    private EntityLivingBase rider;
+ 
+    public EntityVehiclePart(World par1) {
+@@ -167,11 +166,11 @@
        this.needsUpdatePos = false;
     }
  
@@ -12,4 +24,32 @@
           this.setRotation(par7, par8);
        }
  
+    }
+@@ -188,20 +187,18 @@
+ 
+    public void setVehicle(EntityVehicleBase vehicle) {
+       this.getDataManager().set(TRAIN_ID, vehicle.getEntityId());
+    }
+ 
+-   public EntityVehicleBase getVehicle() {
+-      if (this.parent == null) {
+-         int i = this.getDataManager().get(TRAIN_ID);
+-         Entity entity = this.world.getEntityByID(i);
+-         if (entity instanceof EntityVehicleBase) {
+-            this.parent = (EntityVehicleBase)entity;
+-         }
+-      }
++   public EntityVehicleBase<?> getVehicle() {
++      Entity entity = world.getEntityByID(dataManager.get(TRAIN_ID));
+ 
+-      return this.parent;
++      if (entity instanceof EntityVehicleBase) {
++         return (EntityVehicleBase<?>) entity;
++      } else {
++         return null;
++      }
+    }
+ 
+    public void setPartPos(float x, float y, float z) {
+       this.getDataManager().set(POS, new Rotations(x, y, z));
     }

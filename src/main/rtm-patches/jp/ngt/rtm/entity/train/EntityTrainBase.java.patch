@@ -48,7 +48,8 @@
     public static final short MIN_AIR_COUNT = 2480;
     public static final float TRAIN_WIDTH = 2.75F;
     public static final float TRAIN_HEIGHT = 1.1875F;
-    public final BogieController bogieController = new BogieController();
+-   public final BogieController bogieController = new BogieController();
++   public final BogieController bogieController = new BogieController(world);
     private Formation formation;
 -   private float trainSpeed;
     public int brakeCount = 72;
@@ -474,7 +475,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +873,31 @@
+@@ -874,81 +873,38 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
@@ -502,8 +503,10 @@
 -         this.ticket = null;
 -      }
 -
--   }
--
++   public boolean getAutoLinkingState() {
++      return autoLinkingState;
+    }
+ 
 -   private boolean requestTicket() {
 -      Ticket ticket = RTMChunkManager.INSTANCE.getNewTicket(this.world, Type.ENTITY);
 -      if (ticket != null) {
@@ -525,10 +528,8 @@
 -      }
 -
 -      this.ticket = par1;
-+   public boolean getAutoLinkingState() {
-+      return autoLinkingState;
-    }
- 
+-   }
+-
 -   public void forceChunkLoading() {
 -      this.forceChunkLoading(this.chunkCoordX, this.chunkCoordZ);
 +   public void setAutoLinkingState(boolean state) {
@@ -540,9 +541,7 @@
 -         if (this.ticket == null && !this.requestTicket()) {
 -            return;
 -         }
-+   private void updateAutoLinkingState() {
-+      if (!autoLinkingState) return;
- 
+-
 -         if (x != this.prevChunkCoordX || z != this.prevChunkCoordZ) {
 -            this.setupChunks(x, z);
 -         }
@@ -550,22 +549,29 @@
 -         for(ChunkPos chunkpos : this.loadedChunks) {
 -            ForgeChunkManager.forceChunk(this.ticket, chunkpos);
 -         }
-+      if (getNotch() != 1) {
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-+         return;
-+      }
++   private void updateAutoLinkingState() {
++      if (!autoLinkingState) return;
  
 -         ChunkPos chunkpos1 = new ChunkPos(x, z);
 -         ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
++      if (getNotch() != 1) {
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++         return;
+       }
+ 
 +      if (getSpeed() > 15.0F / 72) {
 +         setNotch(0);
 +         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-       }
--
--   }
--
++      }
+    }
+ 
 -   private void setupChunks(int xChunk, int zChunk) {
 -      int i = this.getVehicleState(TrainState.TrainStateType.ChunkLoader);
 -      RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
++   @Override
++   public void onAddedToWorld() {
++      bogieController.setupBogies(this);
++
++      super.onAddedToWorld();
     }
  }

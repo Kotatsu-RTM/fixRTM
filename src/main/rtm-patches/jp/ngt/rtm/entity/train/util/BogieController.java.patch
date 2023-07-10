@@ -1,21 +1,209 @@
 --- a/jp/ngt/rtm/entity/train/util/BogieController.java
 +++ b/jp/ngt/rtm/entity/train/util/BogieController.java
-@@ -11,13 +11,17 @@
+@@ -7,46 +7,78 @@
+ import jp.ngt.rtm.entity.train.EntityBogie;
+ import jp.ngt.rtm.entity.train.EntityTrainBase;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.util.math.BlockPos;
  import net.minecraft.util.math.MathHelper;
++import net.minecraft.world.World;
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
++import org.jetbrains.annotations.NotNull;
  
++import java.util.Arrays;
++import java.util.Objects;
++
  public final class BogieController {
 -   private EntityBogie[] bogies = new EntityBogie[2];
-+   private final EntityBogie[] bogies = new EntityBogie[2];
++   private final Integer[] bs = new Integer[2];
++   private final World world;
     private int tickCount;
  
++   public BogieController(@NotNull World world) {
++      this.world = world;
++   }
++
 +   public EntityBogie[] getBogies() {
-+      return bogies;
++      return Arrays.stream(bs)
++         .filter(Objects::nonNull)
++         .map(world::getEntityByID)
++         .filter(it -> it instanceof EntityBogie)
++         .toArray(EntityBogie[]::new);
 +   }
 +
     public EntityBogie getBogie(EntityTrainBase train, int bogieId) {
-       if (this.bogies[bogieId] == null) {
-          if (train.world.isRemote) {
-             this.setupBogieOnClient(train, bogieId);
+-      if (this.bogies[bogieId] == null) {
+-         if (train.world.isRemote) {
+-            this.setupBogieOnClient(train, bogieId);
++      if (bs[bogieId] == null) {
++         if (world.isRemote) {
++            setupBogieOnClient(train, bogieId);
           } else {
+-            this.setupBogieOnServer(train, bogieId);
++            setupBogieOnServer(train, bogieId);
+          }
+       }
+ 
+-      return this.bogies[bogieId];
++      Integer bogie = bs[bogieId];
++      if (bogie == null) return null;
++
++      Entity entity = world.getEntityByID(bogie);
++      if (entity instanceof EntityBogie) {
++         return (EntityBogie) entity;
++      } else {
++         return null;
++      }
+    }
+ 
+    private EntityBogie getBogie(EntityTrainBase train, boolean isFront) {
+-      boolean flag = this.getBogie(train, 0).isFront();
+-      return !(flag ^ isFront) ? this.getBogie(train, 0) : this.getBogie(train, 1);
++      EntityBogie bogie = getBogie(train, 0);
++      boolean flag = bogie != null && bogie.isFront();
++      return flag == isFront ? this.getBogie(train, 0) : this.getBogie(train, 1);
+    }
+ 
++   public void setupBogies(EntityTrainBase train) {
++      if (train.world.isRemote) {
++         setupBogieOnClient(train, 0);
++         setupBogieOnClient(train, 1);
++      } else {
++         setupBogieOnServer(train, 0);
++         setupBogieOnServer(train, 1);
++      }
++   }
++
+    @SideOnly(Side.CLIENT)
+-   private boolean setupBogieOnClient(EntityTrainBase train, int bogieId) {
++   private void setupBogieOnClient(EntityTrainBase train, int bogieId) {
+       Entity entity = train.world.getEntityByID(train.getBogieEntityId(bogieId));
+-      if (entity instanceof EntityBogie) {
+-         this.bogies[bogieId] = (EntityBogie)entity;
+-         return true;
+-      } else {
+-         return false;
+-      }
++      if (entity instanceof EntityBogie) bs[bogieId] = entity.getEntityId();
+    }
+ 
+-   private boolean setupBogieOnServer(EntityTrainBase train, int bogieId) {
++   private void setupBogieOnServer(EntityTrainBase train, int bogieId) {
+       float f = NGTMath.wrapAngle(train.rotationYaw);
+       float f1 = bogieId == 0 ? f : NGTMath.wrapAngle(f + 180.0F);
+       float[][] afloat = train.getResourceState().getResourceSet().getConfig().getBogiePos();
+       float f2 = afloat[bogieId][2];
+       double d0 = train.posX + (double)(NGTMath.sin(f) * f2);
+@@ -58,17 +90,15 @@
+          if (train.world.spawnEntity(entitybogie)) {
+             boolean flag = train.getTrainDirection() == bogieId;
+             entitybogie.setFront(flag);
+             entitybogie.setTrain(train);
+             train.setBogieEntityId(bogieId, entitybogie.getEntityId());
+-            this.bogies[bogieId] = entitybogie;
+-            NGTLog.debug("[BC]Spawn bogie on Server : %.0f %.0f", new Object[]{entitybogie.posX, entitybogie.posZ});
+-            return true;
++            bs[bogieId] = entitybogie.getEntityId();
++            NGTLog.debug("[BC]Spawn bogie on Server : %.0f %.0f", entitybogie.posX, entitybogie.posZ);
+          }
+       }
+ 
+-      return false;
+    }
+ 
+    public void updateBogies(EntityTrainBase train) {
+       this.updateBogie(train, 0);
+       this.updateBogie(train, 1);
+@@ -78,26 +108,32 @@
+ 
+       ++this.tickCount;
+    }
+ 
+    private void updateBogie(EntityTrainBase train, int id) {
+-      if (train.getEntityWorld().isRemote && (this.getBogie(train, id).isDead || this.tickCount >= 100 && train.getVehicleState(TrainState.TrainStateType.ChunkLoader) > 0)) {
+-         this.setupBogieOnClient(train, id);
+-      }
++      EntityBogie bogie = getBogie(train, id);
+ 
+-      this.getBogie(train, id).onBogieUpdate();
++      if (bogie != null) {
++         if (train.getEntityWorld().isRemote && (bogie.isDead || this.tickCount >= 100 && train.getVehicleState(TrainState.TrainStateType.ChunkLoader) > 0)) {
++            this.setupBogieOnClient(train, id);
++         }
++
++         bogie.onBogieUpdate();
++      }
+    }
+ 
+    public void setDead(EntityTrainBase train) {
+       if (this.getBogie(train, 0) != null) {
+-         this.getBogie(train, 0).setDead();
+-         this.bogies[0] = null;
++         EntityBogie bogie = getBogie(train, 0);
++         if (bogie != null) bogie.setDead();
++         bs[0] = null;
+       }
+ 
+       if (this.getBogie(train, 1) != null) {
+-         this.getBogie(train, 1).setDead();
+-         this.bogies[1] = null;
++         EntityBogie bogie = getBogie(train, 1);
++         if (bogie != null) bogie.setDead();
++         bs[1] = null;
+       }
+ 
+    }
+ 
+    public BogieController.MotionState moveTrainWithBogie(EntityTrainBase train, EntityTrainBase prevTrain, float speed, boolean forceMove) {
+@@ -137,22 +173,27 @@
+          return bogiecontroller$motionstate != BogieController.MotionState.FLY && bogiecontroller$motionstate1 != BogieController.MotionState.FLY ? BogieController.MotionState.STOP : BogieController.MotionState.FLY;
+       }
+    }
+ 
+    private void updateTrainPos(EntityTrainBase train, float lf, float lb) {
++      EntityBogie bogie0 = getBogie(train, 0);
++      EntityBogie bogie1 = getBogie(train, 1);
++
++      if (bogie0 == null || bogie1 == null) return;
++
+       double d0 = (double)(Math.abs(lf) / Math.abs(lf - lb));
+-      double[] adouble = this.getBogie(train, 0).getPosBuf();
+-      double[] adouble1 = this.getBogie(train, 1).getPosBuf();
++      double[] adouble = bogie0.getPosBuf();
++      double[] adouble1 = bogie1.getPosBuf();
+       double d1 = adouble[0] + (adouble1[0] - adouble[0]) * d0;
+       double d2 = (adouble[1] + adouble1[1]) * 0.5D;
+       double d3 = adouble[2] + (adouble1[2] - adouble[2]) * d0;
+       double d4 = adouble[0] - adouble1[0];
+       double d5 = adouble[1] - adouble1[1];
+       double d6 = adouble[2] - adouble1[2];
+       float f = NGTMath.wrapAngle((float)NGTMath.toDegrees(Math.atan2(d4, d6)));
+       float f1 = NGTMath.wrapAngle((float)NGTMath.toDegrees(Math.atan2(d5, Math.sqrt(d4 * d4 + d6 * d6))));
+-      float f2 = (this.getBogie(train, 0).rotationRoll + -this.getBogie(train, 1).rotationRoll) * 0.5F;
++      float f2 = (bogie0.rotationRoll + -bogie1.rotationRoll) * 0.5F;
+       Vec3 vec3 = PooledVec3.create(0.0D, 1.1875D, 0.0D);
+       vec3 = vec3.rotateAroundZ(-f2);
+       vec3 = vec3.rotateAroundY(f);
+       d1 = d1 + vec3.getX();
+       d2 = d2 + (vec3.getY() - 1.1875D);
+@@ -162,15 +203,18 @@
+       this.updateBogiePos(train, 0, BogieController.UpdateFlag.ALL);
+       this.updateBogiePos(train, 1, BogieController.UpdateFlag.ALL);
+    }
+ 
+    public void updateBogiePos(EntityTrainBase train, int bogieIndex, BogieController.UpdateFlag flag) {
++      EntityBogie bogie = getBogie(train, bogieIndex);
++      if (bogie == null) return;
++
+       float[][] afloat = train.getResourceState().getResourceSet().getConfig().getBogiePos();
+       Vec3 vec3 = PooledVec3.create((double)afloat[bogieIndex][0], (double)afloat[bogieIndex][1], (double)afloat[bogieIndex][2]);
+       vec3 = vec3.rotateAroundX(train.rotationPitch);
+       vec3 = vec3.rotateAroundY(train.rotationYaw);
+-      this.getBogie(train, bogieIndex).moveBogie(train, train.posX + vec3.getX(), train.posY + vec3.getY(), train.posZ + vec3.getZ(), flag);
++      bogie.moveBogie(train, train.posX + vec3.getX(), train.posY + vec3.getY(), train.posZ + vec3.getZ(), flag);
+    }
+ 
+    public static enum MotionState {
+       MOVE,
+       STOP,
