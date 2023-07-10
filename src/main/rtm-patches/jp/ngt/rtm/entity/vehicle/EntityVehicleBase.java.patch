@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/entity/vehicle/EntityVehicleBase.java
 +++ b/jp/ngt/rtm/entity/vehicle/EntityVehicleBase.java
-@@ -1,9 +1,15 @@
+@@ -1,9 +1,16 @@
  package jp.ngt.rtm.entity.vehicle;
  
 -import java.util.ArrayList;
@@ -9,6 +9,7 @@
 +import java.util.stream.Collectors;
 +
 +import com.anatawa12.fixRtm.network.NetworkHandler;
++import com.anatawa12.fixRtm.network.NotifyUntracked;
 +import com.anatawa12.fixRtm.network.PacketEntityLoaded;
 +import com.anatawa12.fixRtm.rtm.entity.vehicle.EntityVehicleBaseKt;
 +import com.anatawa12.fixRtm.rtm.world.NewChunkManager;
@@ -18,7 +19,7 @@
  import jp.ngt.ngtlib.math.PooledVec3;
  import jp.ngt.ngtlib.math.Vec3;
  import jp.ngt.ngtlib.network.PacketNBT;
-@@ -20,31 +26,33 @@
+@@ -20,31 +27,34 @@
  import jp.ngt.rtm.modelpack.modelset.ModelSetVehicleBase;
  import jp.ngt.rtm.modelpack.state.ResourceState;
  import jp.ngt.rtm.network.PacketSetTrainState;
@@ -46,6 +47,7 @@
 -   protected List<EntityFloor> vehicleFloors = new ArrayList();
 +   private Set<UUID> floorUuids = new HashSet<>();
 +   private List<Integer> floorIds = new ArrayList<>();
++   private WeatherEffectDummy weatherEffectDummy;
     protected final IUpdateVehicle soundUpdater;
     private boolean floorLoaded;
     private boolean tracked;
@@ -55,7 +57,7 @@
     @SideOnly(Side.CLIENT)
     public int seatRotation;
     @SideOnly(Side.CLIENT)
-@@ -85,13 +93,10 @@
+@@ -85,13 +95,10 @@
           setRenderDistanceWeight(16.0D);
        }
  
@@ -69,7 +71,7 @@
           this.setVehicleState(trainstate$trainstatetype, trainstate$trainstatetype.min);
        }
  
-@@ -100,18 +105,33 @@
+@@ -100,18 +107,33 @@
     protected void entityInit() {
     }
  
@@ -104,7 +106,7 @@
     public boolean shouldRenderInPass(int pass) {
        return pass >= 0;
     }
-@@ -138,26 +158,35 @@
+@@ -138,26 +160,35 @@
  
     public void syncData() {
        this.updateResourceState();
@@ -148,7 +150,7 @@
     public final void onUpdate() {
        this.onVehicleUpdate();
     }
-@@ -179,19 +208,10 @@
+@@ -179,19 +210,10 @@
  
           if (!this.floorLoaded) {
              this.setupFloors();
@@ -168,7 +170,7 @@
           this.updateEntityCollisionState();
           this.updateFallState();
           this.updateMovement();
-@@ -268,11 +288,10 @@
+@@ -268,11 +290,10 @@
  
        try {
           ModelSetBase modelsetbase = this.getResourceState().getResourceSet();
@@ -180,7 +182,7 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
-@@ -310,23 +329,29 @@
+@@ -310,23 +331,29 @@
  
        return y;
     }
@@ -201,7 +203,7 @@
 +      if (!this.isPassenger(passenger) || !(passenger instanceof EntityPlayer)) return;
 +
 +      EntityPlayer player = ((EntityPlayer) passenger);
- 
++
 +      Vec3 vec3 = this.getRiderPos(player);
 +      vec3 = vec3.rotateAroundZ(-this.rotationRoll);
 +      vec3 = vec3.rotateAroundX(this.rotationPitch);
@@ -213,7 +215,7 @@
 +
 +      float yaw = MathHelper.wrapDegrees(this.rotationYaw - this.prevRotationYaw);
 +      float pitch = MathHelper.wrapDegrees(this.rotationPitch - this.prevRotationPitch);
-+
+ 
 +      player.renderYawOffset -= yaw;
 +      player.rotationYaw -= yaw;
 +      player.rotationPitch -= pitch;
@@ -222,7 +224,7 @@
     public Vec3 getRiderPos(Entity passenger) {
        float[] afloat = this.getResourceState().getResourceSet().getConfig().getPlayerPos()[this.getRiderPosIndex()];
        return PooledVec3.create((double)afloat[0], (double)afloat[1] + passenger.getYOffset(), (double)afloat[2]);
-@@ -371,25 +396,25 @@
+@@ -371,25 +398,25 @@
     @SideOnly(Side.CLIENT)
     protected void updateAnimation() {
        ModelSetVehicleBase modelsetvehiclebase = this.getResourceState().getResourceSet();
@@ -251,7 +253,7 @@
        } else {
           int[] aint = this.getPantographMaxHeight();
           if (this.pantograph_F > aint[0]) {
-@@ -417,28 +442,28 @@
+@@ -417,28 +444,28 @@
        this.rollsignV = par1 * 16;
     }
  
@@ -283,7 +285,7 @@
  
           --move;
        }
-@@ -449,30 +474,43 @@
+@@ -449,30 +476,43 @@
     public float getMoveDir() {
        return 1.0F;
     }
@@ -296,27 +298,27 @@
 -      }
 +      if (!(world instanceof WorldServer))
 +         throw new IllegalStateException("EntityVehicleBase#setupFloors must not be called from client thread");
- 
--      T t = this.getResourceState().getResourceSet();
--      this.floorLoaded = true;
++
 +      floorUuids.stream()
 +         .map(it -> ((WorldServer)world).getEntityFromUuid(it))
 +         .filter(Objects::nonNull)
 +         .filter(it -> it instanceof EntityFloor)
 +         .forEach(Entity::setDead);
++
++      floorUuids.clear();
++      floorIds.clear();
++
++      T resourceSet = getResourceState().getResourceSet();
+ 
+-      T t = this.getResourceState().getResourceSet();
+-      this.floorLoaded = true;
++      floorLoaded = true;
  
 -      for(int i = 0; i < t.getConfig().getSlotPos().length; ++i) {
 -         float[] afloat = t.getConfig().getSlotPos()[i];
 -         EntityFloor entityfloor1 = new EntityFloor(this.world, this, new float[]{afloat[0], afloat[1] + this.getVehicleYOffset(), afloat[2]}, (byte)((int)afloat[3]));
 -         if (!this.world.spawnEntity(entityfloor1)) {
 -            this.floorLoaded = false;
-+      floorUuids.clear();
-+      floorIds.clear();
-+
-+      T resourceSet = getResourceState().getResourceSet();
-+
-+      floorLoaded = true;
-+
 +      for (float[] slotPos : resourceSet.getConfig().getSlotPos()) {
 +         EntityFloor floor =
 +            new EntityFloor(
@@ -341,7 +343,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +570,48 @@
+@@ -532,21 +572,53 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
@@ -371,7 +373,11 @@
 +   @Override
 +   public void onRemovedFromWorld() {
 +      super.onRemovedFromWorld();
-+      com.anatawa12.fixRtm.rtm.entity.vehicle.EntityVehicleBaseKt.onRemovedFromWorld(this);
++
++      if (world.isRemote) {
++         if (weatherEffectDummy != null) weatherEffectDummy.setDead();
++         NetworkHandler.sendPacketServer(new NotifyUntracked(getEntityId()));
++      }
 +   }
 +
 +   @Override
@@ -387,7 +393,8 @@
 +      if (!world.isRemote) {
 +         setupFloors();
 +      } else {
-+         world.addWeatherEffect(new WeatherEffectDummy(world, this));
++         weatherEffectDummy = new WeatherEffectDummy(world, this);
++         world.addWeatherEffect(weatherEffectDummy);
 +         NetworkHandler.sendPacketServer(new PacketEntityLoaded(getEntityId()));
 +      }
 +   }

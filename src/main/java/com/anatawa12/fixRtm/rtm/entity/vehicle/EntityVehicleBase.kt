@@ -5,21 +5,12 @@
 package com.anatawa12.fixRtm.rtm.entity.vehicle
 
 import com.anatawa12.fixRtm.addEntityCrashInfoAboutModelSet
-import com.anatawa12.fixRtm.network.NetworkHandler
-import com.anatawa12.fixRtm.network.NotifyUntracked
 import jp.ngt.rtm.entity.train.EntityTrainBase
-import jp.ngt.rtm.entity.train.parts.EntityFloor
 import jp.ngt.rtm.entity.vehicle.EntityVehicleBase
 import net.minecraft.crash.CrashReportCategory
 import net.minecraft.util.math.ChunkPos
 import java.nio.ByteBuffer
 import java.util.UUID
-
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER", "unused")
-fun EntityVehicleBase<*>.onRemovedFromWorld() {
-    if (world.isRemote)
-        NetworkHandler.sendPacketServer(NotifyUntracked(entityId))
-}
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER", "unused")
 fun EntityVehicleBase<*>.addEntityCrashInfo(category: CrashReportCategory) =
