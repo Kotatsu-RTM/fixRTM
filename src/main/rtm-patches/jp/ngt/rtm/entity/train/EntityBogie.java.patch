@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/entity/train/EntityBogie.java
 +++ b/jp/ngt/rtm/entity/train/EntityBogie.java
-@@ -1,8 +1,11 @@
+@@ -1,19 +1,21 @@
  package jp.ngt.rtm.entity.train;
  
  import java.util.List;
@@ -12,7 +12,27 @@
  import jp.ngt.ngtlib.math.Vec3;
  import jp.ngt.ngtlib.protection.Lockable;
  import jp.ngt.ngtlib.util.PermissionManager;
-@@ -44,10 +47,11 @@
+ import jp.ngt.rtm.RTMCore;
+ import jp.ngt.rtm.RTMItem;
+ import jp.ngt.rtm.entity.EntityBumpingPost;
+ import jp.ngt.rtm.entity.train.parts.EntityVehiclePart;
+ import jp.ngt.rtm.entity.train.util.BogieController;
+-import jp.ngt.rtm.entity.train.util.TrainState;
+ import jp.ngt.rtm.entity.vehicle.VehicleTrackerEntry;
+ import jp.ngt.rtm.modelpack.cfg.TrainConfig;
+ import jp.ngt.rtm.rail.TileEntityLargeRailBase;
+ import jp.ngt.rtm.rail.TileEntityLargeRailCore;
+ import jp.ngt.rtm.rail.TileEntityLargeRailSwitchCore;
+@@ -35,19 +37,19 @@
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+ public final class EntityBogie extends Entity implements Lockable {
+    public static final DataParameter<Integer> TRAIN_ID = EntityDataManager.createKey(EntityBogie.class, DataSerializers.VARINT);
+    public static final DataParameter<Byte> BOGIE_STATE = EntityDataManager.createKey(EntityBogie.class, DataSerializers.BYTE);
+-   private EntityTrainBase parentTrain;
+    public boolean isActivated = false;
+    public float movingYaw;
+    private boolean tracked;
     private TileEntityLargeRailCore currentRailObj;
     private RailMap currentRailMap;
     private final double[] posBuf = new double[3];
@@ -24,7 +44,22 @@
     private boolean reverbSound;
     private int jointIndex;
     private int existCount;
-@@ -126,11 +130,11 @@
+@@ -69,12 +71,12 @@
+       this.setBogieSize(2.75F, 1.1875F);
+    }
+ 
+    public EntityBogie(World world, byte id, EntityTrainBase parent) {
+       this(world);
+-      this.setBogieId(id);
+-      this.parentTrain = parent;
++      setBogieId(id);
++      setTrain(parent);
+    }
+ 
+    public void setBogieSize(float width, float height) {
+       this.setSize(width, height);
+    }
+@@ -126,11 +128,11 @@
              return BogieController.MotionState.FLY;
           } else {
              RailMap railmap = this.currentRailMap;
@@ -37,7 +72,7 @@
                 int i1 = k < 0 ? 0 : k;
                 int j1 = l > this.split ? this.split : l;
                 double[] adouble = frontBogie.getPosBuf();
-@@ -171,11 +175,11 @@
+@@ -171,11 +173,11 @@
                 this.rotationBuf[0] = f2;
                 this.rotationBuf[1] = f3;
                 this.rotationBuf[2] = f1;
@@ -50,7 +85,7 @@
                    }
                 }
  
-@@ -196,19 +200,21 @@
+@@ -196,19 +198,21 @@
        TileEntityLargeRailCore tileentitylargerailcore = this.getRail(px, py, pz);
        if (tileentitylargerailcore == null) {
           return false;
@@ -76,7 +111,7 @@
           }
  
           return true;
-@@ -227,14 +233,17 @@
+@@ -227,14 +231,17 @@
        return null;
     }
  
@@ -98,7 +133,7 @@
     }
  
     protected boolean reverseJointArray() {
-@@ -245,13 +254,13 @@
+@@ -245,13 +252,13 @@
  
     protected void playJointSound() {
        EntityTrainBase entitytrainbase = this.getTrain();
@@ -114,7 +149,7 @@
              int j = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
              ++this.jointIndex;
              int k = this.reverseJointArray() ? i - this.jointIndex - 1 : this.jointIndex;
-@@ -287,15 +296,25 @@
+@@ -287,15 +294,25 @@
  
     public final void onUpdate() {
        if (!this.world.isRemote && !this.tracked) {
@@ -142,7 +177,7 @@
  
     public void onBogieUpdate() {
        super.onUpdate();
-@@ -308,12 +327,11 @@
+@@ -308,12 +325,11 @@
        }
  
     }
@@ -156,7 +191,7 @@
  
     }
  
-@@ -349,13 +367,14 @@
+@@ -349,13 +365,14 @@
  
     public boolean attackEntityFrom(DamageSource par1, float par2) {
        if (this.getTrain() != null && !this.getTrain().isDead) {
@@ -173,7 +208,7 @@
        }
     }
  
-@@ -491,10 +510,14 @@
+@@ -491,10 +508,14 @@
     public void addVelocity(double par1, double par3, double par5) {
     }
  
@@ -188,7 +223,36 @@
           }
        } else if (player.inventory.getCurrentItem() != null && player.inventory.getCurrentItem().getItem() == RTMItem.paddle) {
           return true;
-@@ -578,6 +601,25 @@
+@@ -506,23 +527,17 @@
+    public void setTrain(EntityTrainBase train) {
+       this.getDataManager().set(TRAIN_ID, train.getEntityId());
+    }
+ 
+    public EntityTrainBase getTrain() {
+-      if (this.parentTrain == null || this.parentTrain.isDead) {
+-         int i = this.getDataManager().get(TRAIN_ID);
+-         Entity entity = this.world.getEntityByID(i);
+-         if (entity instanceof EntityTrainBase) {
+-            this.parentTrain = (EntityTrainBase)entity;
+-         }
++      Entity parentEntity = world.getEntityByID(dataManager.get(TRAIN_ID));
+ 
+-         if (this.parentTrain == null || this.parentTrain.isDead) {
+-            return null;
+-         }
++      if (parentEntity instanceof EntityTrainBase) {
++         return (EntityTrainBase) parentEntity;
++      } else {
++         return null;
+       }
+-
+-      return this.parentTrain;
+    }
+ 
+    private byte getBogieState() {
+       return this.getDataManager().get(BOGIE_STATE);
+    }
+@@ -578,6 +593,25 @@
     }
  
     public int getProhibitedAction() {

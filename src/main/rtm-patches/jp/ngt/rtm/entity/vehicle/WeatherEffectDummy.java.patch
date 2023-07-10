@@ -1,6 +1,91 @@
 --- a/jp/ngt/rtm/entity/vehicle/WeatherEffectDummy.java
 +++ b/jp/ngt/rtm/entity/vehicle/WeatherEffectDummy.java
-@@ -57,6 +57,11 @@
+@@ -1,62 +1,86 @@
+ package jp.ngt.rtm.entity.vehicle;
+ 
+ import jp.ngt.ngtlib.io.NGTLog;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.nbt.NBTTagCompound;
++import net.minecraft.util.math.AxisAlignedBB;
+ import net.minecraft.world.World;
+ 
+ public final class WeatherEffectDummy extends Entity {
+-   private final EntityVehicleBase parent;
++   private final int parent;
+ 
+    public WeatherEffectDummy(World world, EntityVehicleBase vehicle) {
+       super(world);
+-      this.parent = vehicle;
+-      NGTLog.debug("[WED] Spawn %d", new Object[]{this.parent.getEntityId()});
++      parent = vehicle.getEntityId();
++      NGTLog.debug("[WED] Spawn %d", parent);
+    }
+ 
+-   public EntityVehicleBase getParent() {
+-      return this.parent;
++   public EntityVehicleBase<?> getParent() {
++      Entity entity = world.getEntityByID(parent);
++      if (entity instanceof EntityVehicleBase) {
++         return (EntityVehicleBase<?>) entity;
++      } else {
++         return null;
++      }
+    }
+ 
+    public void onUpdate() {
++      EntityVehicleBase<?> vehicle = getParent();
++
++      if (vehicle == null) {
++         setDead();
++         return;
++      }
++
+       super.onUpdate();
++
+       this.lastTickPosX = this.posX;
+       this.lastTickPosY = this.posY;
+       this.lastTickPosZ = this.posZ;
+-      this.posX = this.parent.posX;
+-      this.posY = this.parent.posY;
+-      this.posZ = this.parent.posZ;
+-      this.rotationYaw = this.parent.rotationYaw;
+-      this.rotationPitch = this.parent.rotationPitch;
+-      if (this.parent.isDead) {
+-         this.setDead();
+-         NGTLog.debug("[WED] Remove %d", new Object[]{this.parent.getEntityId()});
+-      }
+-
++      this.posX = vehicle.posX;
++      this.posY = vehicle.posY;
++      this.posZ = vehicle.posZ;
++      this.rotationYaw = vehicle.rotationYaw;
++      this.rotationPitch = vehicle.rotationPitch;
+    }
+ 
+    public int getEntityId() {
+-      return this.parent.getEntityId();
++      return this.parent;
+    }
+ 
+    public boolean shouldRenderInPass(int pass) {
+-      return this.parent.shouldRenderInPass(pass);
++      EntityVehicleBase<?> vehicle = getParent();
++      return vehicle != null && vehicle.shouldRenderInPass(pass);
+    }
+ 
+    public boolean isInRangeToRender3d(double x, double y, double z) {
+       return true;
+    }
+ 
+    public int getBrightnessForRender() {
+-      return this.parent.getBrightnessForRender();
++      EntityVehicleBase<?> vehicle = getParent();
++      return vehicle == null ? 0 : vehicle.getBrightnessForRender();
+    }
+ 
+    protected void entityInit() {
+    }
+ 
     protected void readEntityFromNBT(NBTTagCompound compound) {
     }
  
@@ -9,6 +94,14 @@
 +
 +   @Override
 +   public net.minecraft.util.math.AxisAlignedBB getEntityBoundingBox() {
-+      return this.parent.getEntityBoundingBox();
++      EntityVehicleBase<?> vehicle = getParent();
++
++      return vehicle == null ? new AxisAlignedBB(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) : vehicle.getEntityBoundingBox();
++   }
++
++   @Override
++   public void setDead() {
++      super.setDead();
++      NGTLog.debug("[WED] Remove %d", parent);
 +   }
  }

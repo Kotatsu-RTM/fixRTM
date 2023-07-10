@@ -1,9 +1,12 @@
 --- a/jp/ngt/rtm/entity/train/util/Formation.java
 +++ b/jp/ngt/rtm/entity/train/util/Formation.java
-@@ -9,14 +9,15 @@
+@@ -7,17 +7,20 @@
+ import jp.ngt.rtm.entity.train.EntityBogie;
+ import jp.ngt.rtm.entity.train.EntityTrainBase;
  import jp.ngt.rtm.network.PacketFormation;
  import net.minecraft.nbt.NBTTagCompound;
  import net.minecraft.nbt.NBTTagList;
++import net.minecraft.world.World;
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
 +import org.jetbrains.annotations.Nullable;
@@ -11,13 +14,16 @@
  public final class Formation {
     public final long id;
 -   public FormationEntry[] entries;
+-   private EntityTrainBase controlCar;
 +   public @Nullable  FormationEntry[] entries;
-    private EntityTrainBase controlCar;
++   private World world;
++   private Integer controlCar;
     private byte direction;
     private float speed;
  
     public Formation(long par1, int par2) {
-@@ -121,10 +122,11 @@
+       this.id = par1;
+@@ -121,10 +124,11 @@
  
     private void reverse() {
        NGTUtil.reverse(this.entries);
@@ -29,7 +35,7 @@
  
     }
  
-@@ -147,29 +149,32 @@
+@@ -147,29 +151,32 @@
        this.entries = aformationentry;
     }
  
@@ -65,7 +71,7 @@
  
           FormationManager.getInstance().removeFormation(par5.id);
        }
-@@ -211,11 +216,11 @@
+@@ -211,40 +218,45 @@
           int i = flag ? formationentry.entryId : formationentry.entryId + 1;
           int j = this.entries.length - i;
           Formation formation = new Formation(FormationManager.getInstance().getNewFormationId(), j);
@@ -78,19 +84,34 @@
  
           formation.reallocation();
           this.trim(0, i - 1);
-@@ -224,10 +229,11 @@
+          this.reallocation();
+       }
     }
  
     private EntityTrainBase getControlCar() {
-       if (this.controlCar == null || !this.controlCar.isControlCar()) {
-          for(FormationEntry formationentry : this.entries) {
-+            if (formationentry == null) continue;
-             if (formationentry.train.isControlCar()) {
-                this.controlCar = formationentry.train;
+-      if (this.controlCar == null || !this.controlCar.isControlCar()) {
+-         for(FormationEntry formationentry : this.entries) {
+-            if (formationentry.train.isControlCar()) {
+-               this.controlCar = formationentry.train;
++      if (world == null) return null;
++
++      if (controlCar == null || !(world.getEntityByID(controlCar) instanceof EntityTrainBase)) {
++         controlCar = null;
++         for (FormationEntry entry : entries) {
++            if (entry == null) continue;
++            if (entry.train.isControlCar()) {
++               controlCar = entry.train.getEntityId();
                 break;
              }
           }
-@@ -241,10 +247,11 @@
+       }
+ 
+-      return this.controlCar;
++      return controlCar != null ? (EntityTrainBase) world.getEntityByID(controlCar) : null;
+    }
+ 
+    public int getNotch() {
+       return this.getControlCar() == null ? 0 : this.getControlCar().getNotch();
     }
  
     public void setSpeed(float par1) {
@@ -102,7 +123,7 @@
  
           this.speed = par1;
        }
-@@ -266,34 +273,39 @@
+@@ -266,34 +278,40 @@
        }
     }
  
@@ -111,8 +132,10 @@
 +         if (formationentry == null) continue;
           if (type == TrainState.TrainStateType.Role) {
 -            if (data == TrainState.Role_Front.data) {
+-               this.controlCar = par2;
 +            if (data == TrainState.Role_Front.data || data == TrainState.Role_Back.data) {
-                this.controlCar = par2;
++               world = par2.world;
++               controlCar = par2.getEntityId();
 +               par2.setTrainDirection(par2.getTrainDirection());
              }
  

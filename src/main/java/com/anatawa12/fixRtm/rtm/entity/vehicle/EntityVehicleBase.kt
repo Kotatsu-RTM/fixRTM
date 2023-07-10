@@ -29,7 +29,9 @@ fun getChunkPosArray(entity: EntityVehicleBase<*>) =
     mutableSetOf<ChunkPos>().apply {
         addAll(entity.floors.map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
         if (entity !is EntityTrainBase) return@apply
-        addAll(entity.bogieController.bogies.filterNotNull().map { ChunkPos(it.position.x shr 4, it.position.z shr 4) })
+        addAll(
+            entity.bogieController.bogies.filterNotNull().map { ChunkPos(it.position.x shr 4, it.position.z shr 4) }
+        )
     }.flatMap { listOf(it.x, it.z) }.toIntArray()
 
 fun intArrayToChunks(array: IntArray) =
@@ -39,15 +41,17 @@ fun intArrayToChunks(array: IntArray) =
         }
     }
 
-fun floorsUuidToByteArray(vehicleFloors: List<EntityFloor>) =
-    vehicleFloors.map(EntityFloor::getUniqueID).flatMap {
-        ByteBuffer.allocate(16).apply {
-            putLong(it.mostSignificantBits)
-            putLong(it.leastSignificantBits)
-        }.array().toList()
+fun uuidsToByteArray(list: Collection<UUID>) =
+    list.flatMap {
+        ByteBuffer
+            .allocate(16)
+            .putLong(it.mostSignificantBits)
+            .putLong(it.leastSignificantBits)
+            .array()
+            .toList()
     }.toByteArray()
 
-fun byteArrayToUuidArray(byteArray: ByteArray): Array<UUID> {
+fun byteArrayToUuidList(byteArray: ByteArray): List<UUID> {
     if (byteArray.size % 16 != 0) throw IllegalArgumentException("ByteArray size must be multiple of 16")
 
     val uuids = mutableListOf<UUID>()
@@ -57,5 +61,5 @@ fun byteArrayToUuidArray(byteArray: ByteArray): Array<UUID> {
         uuids.add(UUID(buffer.getLong(i), buffer.getLong(i + 8)))
     }
 
-    return uuids.toTypedArray()
+    return uuids
 }
