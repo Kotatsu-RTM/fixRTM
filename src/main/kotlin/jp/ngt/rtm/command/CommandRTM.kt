@@ -34,15 +34,8 @@ class CommandRTM : CommandBase() {
 
     override fun getUsage(commandSender: ICommandSender): String = "commands.rtm.usage"
 
-    private inline fun <reified T : Entity> List<Entity>.killAllTypeOf() = this
-        .asSequence()
-        .filterIsInstance<T>()
-        .filterNot { it.isDead }
-        .let {
-            val count = it.count()
-            it.forEach(Entity::setDead)
-            count
-        }
+    private inline fun <reified T : Entity> List<Entity>.killAllTypeOf() =
+        this.filterIsInstance<T>().filterNot(Entity::isDead).map(Entity::setDead).size
 
     override fun getTabCompletions(
         server: MinecraftServer,
