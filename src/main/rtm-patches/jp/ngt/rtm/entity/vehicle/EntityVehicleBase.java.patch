@@ -19,7 +19,7 @@
  import jp.ngt.ngtlib.math.PooledVec3;
  import jp.ngt.ngtlib.math.Vec3;
  import jp.ngt.ngtlib.network.PacketNBT;
-@@ -20,31 +27,34 @@
+@@ -20,31 +27,35 @@
  import jp.ngt.rtm.modelpack.modelset.ModelSetVehicleBase;
  import jp.ngt.rtm.modelpack.state.ResourceState;
  import jp.ngt.rtm.network.PacketSetTrainState;
@@ -36,6 +36,7 @@
 +import net.minecraft.world.WorldServer;
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
++import org.apache.commons.lang3.ArrayUtils;
  
  public abstract class EntityVehicleBase<T extends ModelSetVehicleBase> extends EntityCustom implements IResourceSelector {
     public static final int MAX_SEAT_ROTATION = 45;
@@ -57,7 +58,7 @@
     @SideOnly(Side.CLIENT)
     public int seatRotation;
     @SideOnly(Side.CLIENT)
-@@ -85,13 +95,10 @@
+@@ -85,13 +96,10 @@
           setRenderDistanceWeight(16.0D);
        }
  
@@ -71,7 +72,7 @@
           this.setVehicleState(trainstate$trainstatetype, trainstate$trainstatetype.min);
        }
  
-@@ -100,18 +107,33 @@
+@@ -100,18 +108,34 @@
     protected void entityInit() {
     }
  
@@ -80,7 +81,8 @@
 +
 +      if (!world.isRemote) {
 +         nbt.setIntArray("chunks", EntityVehicleBaseKt.getChunkPosArray(this));
-+         nbt.setByteArray("vehicleFloors", EntityVehicleBaseKt.uuidsToByteArray(floorUuids));
++         nbt.setByteArray("vehicleFloorUuids", EntityVehicleBaseKt.uuidsToByteArray(floorUuids));
++         nbt.setIntArray("vehicleFloorEntityIds", ArrayUtils.toPrimitive(floorIds.toArray(new Integer[0])));
 +      }
     }
  
@@ -106,7 +108,7 @@
     public boolean shouldRenderInPass(int pass) {
        return pass >= 0;
     }
-@@ -138,26 +160,35 @@
+@@ -138,26 +162,35 @@
  
     public void syncData() {
        this.updateResourceState();
@@ -150,7 +152,7 @@
     public final void onUpdate() {
        this.onVehicleUpdate();
     }
-@@ -179,19 +210,10 @@
+@@ -179,19 +212,10 @@
  
           if (!this.floorLoaded) {
              this.setupFloors();
@@ -170,7 +172,7 @@
           this.updateEntityCollisionState();
           this.updateFallState();
           this.updateMovement();
-@@ -268,11 +290,10 @@
+@@ -268,11 +292,10 @@
  
        try {
           ModelSetBase modelsetbase = this.getResourceState().getResourceSet();
@@ -182,7 +184,7 @@
        if (axisalignedbb == null) {
           axisalignedbb = new AxisAlignedBB(-1.5D, 0.0D, -2.0D, 1.5D, 3.0D, 2.0D);
        }
-@@ -310,23 +331,29 @@
+@@ -310,23 +333,29 @@
  
        return y;
     }
@@ -224,7 +226,7 @@
     public Vec3 getRiderPos(Entity passenger) {
        float[] afloat = this.getResourceState().getResourceSet().getConfig().getPlayerPos()[this.getRiderPosIndex()];
        return PooledVec3.create((double)afloat[0], (double)afloat[1] + passenger.getYOffset(), (double)afloat[2]);
-@@ -371,25 +398,25 @@
+@@ -371,25 +400,25 @@
     @SideOnly(Side.CLIENT)
     protected void updateAnimation() {
        ModelSetVehicleBase modelsetvehiclebase = this.getResourceState().getResourceSet();
@@ -253,7 +255,7 @@
        } else {
           int[] aint = this.getPantographMaxHeight();
           if (this.pantograph_F > aint[0]) {
-@@ -417,28 +444,28 @@
+@@ -417,28 +446,28 @@
        this.rollsignV = par1 * 16;
     }
  
@@ -285,7 +287,7 @@
  
           --move;
        }
-@@ -449,30 +476,43 @@
+@@ -449,30 +478,43 @@
     public float getMoveDir() {
        return 1.0F;
     }
@@ -309,16 +311,11 @@
 +      floorIds.clear();
 +
 +      T resourceSet = getResourceState().getResourceSet();
++
++      floorLoaded = true;
  
 -      T t = this.getResourceState().getResourceSet();
 -      this.floorLoaded = true;
-+      floorLoaded = true;
- 
--      for(int i = 0; i < t.getConfig().getSlotPos().length; ++i) {
--         float[] afloat = t.getConfig().getSlotPos()[i];
--         EntityFloor entityfloor1 = new EntityFloor(this.world, this, new float[]{afloat[0], afloat[1] + this.getVehicleYOffset(), afloat[2]}, (byte)((int)afloat[3]));
--         if (!this.world.spawnEntity(entityfloor1)) {
--            this.floorLoaded = false;
 +      for (float[] slotPos : resourceSet.getConfig().getSlotPos()) {
 +         EntityFloor floor =
 +            new EntityFloor(
@@ -327,7 +324,12 @@
 +               new float[] {slotPos[0], slotPos[1] + getVehicleYOffset(), slotPos[2]},
 +               (byte) slotPos[3]
 +            );
-+
+ 
+-      for(int i = 0; i < t.getConfig().getSlotPos().length; ++i) {
+-         float[] afloat = t.getConfig().getSlotPos()[i];
+-         EntityFloor entityfloor1 = new EntityFloor(this.world, this, new float[]{afloat[0], afloat[1] + this.getVehicleYOffset(), afloat[2]}, (byte)((int)afloat[3]));
+-         if (!this.world.spawnEntity(entityfloor1)) {
+-            this.floorLoaded = false;
 +         if (!world.spawnEntity(floor)) {
 +            floorLoaded = false;
              break;
@@ -343,7 +345,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +572,53 @@
+@@ -532,21 +574,53 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
