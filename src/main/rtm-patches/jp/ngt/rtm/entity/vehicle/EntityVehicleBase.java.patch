@@ -81,7 +81,7 @@
 +
 +      if (!world.isRemote) {
 +         nbt.setIntArray("chunks", EntityVehicleBaseKt.getChunkPosArray(this));
-+         nbt.setByteArray("vehicleFloorUuids", EntityVehicleBaseKt.uuidsToByteArray(floorUuids));
++         nbt.setByteArray("vehicleFloorUuids", EntityVehicleBaseKt.uuidsToByteArray(new ArrayList<>(floorUuids)));
 +         nbt.setIntArray("vehicleFloorEntityIds", ArrayUtils.toPrimitive(floorIds.toArray(new Integer[0])));
 +      }
     }
