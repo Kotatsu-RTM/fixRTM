@@ -475,7 +475,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +873,38 @@
+@@ -874,81 +873,49 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
@@ -502,9 +502,12 @@
 -         ForgeChunkManager.releaseTicket(this.ticket);
 -         this.ticket = null;
 -      }
--
 +   public boolean getAutoLinkingState() {
 +      return autoLinkingState;
++   }
+ 
++   public void setAutoLinkingState(boolean state) {
++      autoLinkingState = state;
     }
  
 -   private boolean requestTicket() {
@@ -519,21 +522,33 @@
 -      } else {
 -         NGTLog.debug("[RTM] Failed to get ticket (Chunk Loader)");
 -         return false;
--      }
++   private void updateAutoLinkingState() {
++      if (!autoLinkingState) return;
++
++      if (getNotch() != 1) {
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++         return;
+       }
 -   }
--
+ 
 -   public void setChunkTicket(Ticket par1) {
 -      if (this.ticket != par1) {
 -         ForgeChunkManager.releaseTicket(this.ticket);
--      }
--
++      if (getSpeed() > 15.0F / 72) {
++         setNotch(0);
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
+       }
++   }
+ 
 -      this.ticket = par1;
 -   }
--
++   @Override
++   public void onAddedToWorld() {
++      bogieController.setupBogies(this);
+ 
 -   public void forceChunkLoading() {
 -      this.forceChunkLoading(this.chunkCoordX, this.chunkCoordZ);
-+   public void setAutoLinkingState(boolean state) {
-+      autoLinkingState = state;
++      super.onAddedToWorld();
     }
  
 -   public void forceChunkLoading(int x, int z) {
@@ -541,37 +556,30 @@
 -         if (this.ticket == null && !this.requestTicket()) {
 -            return;
 -         }
--
++   @Override
++   public void onRemovedFromWorld() {
++      super.onRemovedFromWorld();
+ 
 -         if (x != this.prevChunkCoordX || z != this.prevChunkCoordZ) {
 -            this.setupChunks(x, z);
 -         }
--
++      EntityBogie bogie0 = getBogie(0);
++      if (bogie0 != null) bogie0.setDead();
+ 
 -         for(ChunkPos chunkpos : this.loadedChunks) {
 -            ForgeChunkManager.forceChunk(this.ticket, chunkpos);
 -         }
-+   private void updateAutoLinkingState() {
-+      if (!autoLinkingState) return;
- 
+-
 -         ChunkPos chunkpos1 = new ChunkPos(x, z);
 -         ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
-+      if (getNotch() != 1) {
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-+         return;
-       }
- 
-+      if (getSpeed() > 15.0F / 72) {
-+         setNotch(0);
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-+      }
-    }
- 
+-      }
+-
+-   }
+-
 -   private void setupChunks(int xChunk, int zChunk) {
 -      int i = this.getVehicleState(TrainState.TrainStateType.ChunkLoader);
 -      RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
-+   @Override
-+   public void onAddedToWorld() {
-+      bogieController.setupBogies(this);
-+
-+      super.onAddedToWorld();
++      EntityBogie bogie1 = getBogie(1);
++      if (bogie1 != null) bogie1.setDead();
     }
  }
