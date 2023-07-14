@@ -134,7 +134,7 @@
           this.direction = (byte)(par1 ^ formationentry.dir);
           byte b0 = 0;
  
-@@ -265,35 +280,48 @@
+@@ -265,35 +280,50 @@
  
        }
     }
@@ -175,8 +175,10 @@
 +            byte value = par2.getTrainDirection() != formationentry.train.getTrainDirection() ? swapped : data;
 +            formationentry.train.setTrainStateData_NoSync(type, value);
 +         }
-+     } else if (type == TrainState.TrainStateType.AutoLinking) {
++      } else if (type == TrainState.TrainStateType.AutoLinking) {
++         for (FormationEntry formationentry : this.entries) {
 +            formationentry.train.setAutoLinkingState(data > 0);
++         }
 +      } else {
 +         for (FormationEntry formationentry : this.entries) {
 +            if (formationentry == null) continue;
