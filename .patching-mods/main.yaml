@@ -75,7 +75,6 @@ mods:
       - jp.ngt.rtm.electric.BlockElectricalWiring
       - jp.ngt.rtm.electric.BlockInsulator
       - jp.ngt.rtm.electric.BlockSignal
-      - jp.ngt.rtm.electric.BlockSpeaker
       - jp.ngt.rtm.electric.BlockTicketVendor
       - jp.ngt.rtm.electric.RenderElectricalWiring
       - jp.ngt.rtm.electric.RenderSignal
