@@ -1,18 +1,6 @@
 --- a/jp/ngt/rtm/block/BlockRailroadSign.java
 +++ b/jp/ngt/rtm/block/BlockRailroadSign.java
-@@ -13,10 +13,11 @@
- import net.minecraft.init.Blocks;
- import net.minecraft.item.ItemStack;
- import net.minecraft.tileentity.TileEntity;
- import net.minecraft.util.math.AxisAlignedBB;
- import net.minecraft.util.math.BlockPos;
-+import net.minecraft.util.math.RayTraceResult;
- import net.minecraft.world.IBlockAccess;
- import net.minecraft.world.World;
- 
- public class BlockRailroadSign extends BlockContainerCustomWithMeta {
-    public BlockRailroadSign() {
-@@ -38,15 +39,20 @@
+@@ -38,10 +38,14 @@
           int i = holder.getBlockPos().getX();
           int j = holder.getBlockPos().getY();
           int k = holder.getBlockPos().getZ();
@@ -27,11 +15,3 @@
  
        return true;
     }
- 
--   protected ItemStack getItem(int damage) {
--      return new ItemStack(RTMItem.installedObject, 1, ItemInstalledObject.IstlObjType.RAILLOAD_SIGN.id);
-+   @Override
-+   public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
-+      return com.anatawa12.fixRtm.rtm.block.BlockOrnamentMain.getPickBlock(world, pos, ItemInstalledObject.IstlObjType.RAILLOAD_SIGN);
-    }
- }
