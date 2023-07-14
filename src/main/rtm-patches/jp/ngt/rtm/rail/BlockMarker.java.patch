@@ -53,16 +53,16 @@
     public void makeRailMap(TileEntityMarker marker, int x, int y, int z) {
 -      this.onMarkerActivated(marker.getWorld(), x, y, z, (EntityPlayer)null, false);
 +      this.makeRailMap(marker, (EntityPlayer) null, x, y, z);
-    }
- 
++   }
++
 +   public void makeRailMap(TileEntityMarker marker, EntityPlayer player, int x, int y, int z) {
 +      this.onMarkerActivated(marker.getWorld(), x, y, z, player, false);
 +   }
 +
 +   public void makeRailMap(TileEntityMarker marker, Integer entityId, int x, int y, int z) {
 +      this.onMarkerActivated(marker.getWorld(), x, y, z, null, entityId, false);
-+   }
-+
+    }
+ 
     public boolean onMarkerActivated(World world, int x, int y, int z, EntityPlayer player, boolean makeRail) {
 +      Integer entityId = null;
 +      if (player != null) entityId = player.getEntityId();
@@ -245,19 +245,3 @@
              BlockUtil.setBlock(world, i, j, k, RTMRail.TURNTABLE_CORE, 0, 3);
              TileEntityTurnTableCore tileentityturntablecore = (TileEntityTurnTableCore)BlockUtil.getTileEntity(world, i, j, k);
              tileentityturntablecore.setRailPositions(new RailPosition[]{start, end});
-@@ -379,10 +424,15 @@
- 
-          return null;
-       }
-    }
- 
-+   @Override
-+   protected ItemStack getItem(int damage) {
-+      return new ItemStack(this);
-+   }
-+
-    public static enum MarkerType {
-       STANDARD(16711680),
-       SWITCH(255);
- 
-       public final int color;
