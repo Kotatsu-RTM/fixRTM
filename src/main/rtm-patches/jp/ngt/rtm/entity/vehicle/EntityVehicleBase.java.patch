@@ -205,7 +205,7 @@
 +      if (!this.isPassenger(passenger) || !(passenger instanceof EntityPlayer)) return;
 +
 +      EntityPlayer player = ((EntityPlayer) passenger);
-+
+ 
 +      Vec3 vec3 = this.getRiderPos(player);
 +      vec3 = vec3.rotateAroundZ(-this.rotationRoll);
 +      vec3 = vec3.rotateAroundX(this.rotationPitch);
@@ -217,7 +217,7 @@
 +
 +      float yaw = MathHelper.wrapDegrees(this.rotationYaw - this.prevRotationYaw);
 +      float pitch = MathHelper.wrapDegrees(this.rotationPitch - this.prevRotationPitch);
- 
++
 +      player.renderYawOffset -= yaw;
 +      player.rotationYaw -= yaw;
 +      player.rotationPitch -= pitch;
@@ -345,7 +345,7 @@
     public String getName() {
        return this.getResourceState().getName();
     }
-@@ -532,21 +574,53 @@
+@@ -532,21 +574,50 @@
     public void setTrainStateData(int id, byte data) {
        this.setVehicleState(TrainState.getStateType(id), data);
     }
@@ -358,9 +358,6 @@
     public void setVehicleState(TrainState.TrainStateType type, byte data) {
 -      this.getResourceState().getDataMap().setInt(type.toString(), data, 3);
 +      this.getResourceState().getDataMap().setInt(type.toString(), type.clap(data, this), 3);
-+      if (type == TrainState.TrainStateType.Direction && data != getVehicleState(TrainState.TrainStateType.Direction)) {
-+         setSpeed(-getSpeed());
-+      }
     }
  
     @SideOnly(Side.CLIENT)
