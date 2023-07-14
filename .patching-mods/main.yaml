@@ -6,9 +6,9 @@ mods:
   ngtlib:
     patch-path: src/main/ngtlib-patches
     source-path: src/main/ngtlib
-    unmodifieds-jar: build/patching-mod/mods/ngtlib/ngtlib-2.4.20-unmodifieds.jar
-    source-jar: curse/ngtlib/2.4.20/ngtlib-2.4.20-stable-39-deobf-1.5.498.12-sources.jar
-    deobf-jar: curse/ngtlib/2.4.20/ngtlib-2.4.20-stable-39-deobf.jar
+    unmodifieds-jar: build/patching-mod/mods/ngtlib/ngtlib-2.4.21-unmodifieds.jar
+    source-jar: curse/ngtlib/2.4.21/ngtlib-2.4.21-stable-39-deobf-1.5.498.12-sources.jar
+    deobf-jar: curse/ngtlib/2.4.21/ngtlib-2.4.21-stable-39-deobf.jar
     changed-classes:
       - jp.ngt.ngtlib.NGTCore
       - jp.ngt.ngtlib.block.TileEntityCustom
@@ -25,7 +25,9 @@ mods:
       - jp.ngt.ngtlib.item.craft.ShapedRecipes55
       - jp.ngt.ngtlib.math.BezierCurve
       - jp.ngt.ngtlib.network.PacketNBT
+      - jp.ngt.ngtlib.network.PacketNBTHandlerServer
       - jp.ngt.ngtlib.protection.ProtectionManager
+      - jp.ngt.ngtlib.renderer.GLHelper
       - jp.ngt.ngtlib.renderer.model.ModelLoader
       - jp.ngt.ngtlib.renderer.model.ObjModel
       - jp.ngt.ngtlib.renderer.model.PolygonModel
@@ -35,9 +37,9 @@ mods:
   rtm:
     patch-path: src/main/rtm-patches
     source-path: src/main/rtm
-    unmodifieds-jar: build/patching-mod/mods/rtm/realtrainmod-2.4.23-unmodifieds.jar
-    source-jar: curse/realtrainmod/2.4.23/realtrainmod-2.4.23-stable-39-deobf-1.5.498.12-sources.jar
-    deobf-jar: curse/realtrainmod/2.4.23/realtrainmod-2.4.23-stable-39-deobf.jar
+    unmodifieds-jar: build/patching-mod/mods/rtm/realtrainmod-2.4.24-unmodifieds.jar
+    source-jar: curse/realtrainmod/2.4.24/realtrainmod-2.4.24-stable-39-deobf-1.5.498.12-sources.jar
+    deobf-jar: curse/realtrainmod/2.4.24/realtrainmod-2.4.24-stable-39-deobf.jar
     changed-classes:
       - jp.ngt.rtm.ClientProxy
       - jp.ngt.rtm.CreativeTabRTM
@@ -47,15 +49,23 @@ mods:
       - jp.ngt.rtm.RTMItem
       - jp.ngt.rtm.RTMRecipe
       - jp.ngt.rtm.RTMSound
+      - jp.ngt.rtm.block.BlockCrossingGate
+      - jp.ngt.rtm.block.BlockDecoration
+      - jp.ngt.rtm.block.BlockFlag
       - jp.ngt.rtm.block.BlockFluorescent
+      - jp.ngt.rtm.block.BlockLight
       - jp.ngt.rtm.block.BlockLinePole
       - jp.ngt.rtm.block.BlockMachineBase
+      - jp.ngt.rtm.block.BlockMechanism
       - jp.ngt.rtm.block.BlockPipe
       - jp.ngt.rtm.block.BlockPlant
+      - jp.ngt.rtm.block.BlockPoint
       - jp.ngt.rtm.block.BlockRailroadSign
       - jp.ngt.rtm.block.BlockScaffold
       - jp.ngt.rtm.block.BlockScaffoldStairs
       - jp.ngt.rtm.block.BlockSignBoard
+      - jp.ngt.rtm.block.BlockStation
+      - jp.ngt.rtm.block.BlockTurnstile
       - jp.ngt.rtm.block.tileentity.RenderMachine
       - jp.ngt.rtm.block.tileentity.RenderOrnament
       - jp.ngt.rtm.block.tileentity.RenderRailroadSign
@@ -74,6 +84,7 @@ mods:
       - jp.ngt.rtm.electric.BlockElectricalWiring
       - jp.ngt.rtm.electric.BlockInsulator
       - jp.ngt.rtm.electric.BlockSignal
+      - jp.ngt.rtm.electric.BlockSpeaker
       - jp.ngt.rtm.electric.BlockTicketVendor
       - jp.ngt.rtm.electric.RenderElectricalWiring
       - jp.ngt.rtm.electric.RenderSignal
@@ -91,6 +102,7 @@ mods:
       - jp.ngt.rtm.entity.train.parts.EntityCargo
       - jp.ngt.rtm.entity.train.parts.EntityCargoWithModel
       - jp.ngt.rtm.entity.train.parts.EntityContainer
+      - jp.ngt.rtm.entity.train.parts.EntityFloor
       - jp.ngt.rtm.entity.train.parts.EntityVehiclePart
       - jp.ngt.rtm.entity.train.util.BogieController
       - jp.ngt.rtm.entity.train.util.EnumNotch
@@ -133,9 +145,26 @@ mods:
       - jp.ngt.rtm.modelpack.modelset.ModelSetTrain
       - jp.ngt.rtm.modelpack.modelset.ModelSetVehicleBase
       - jp.ngt.rtm.modelpack.modelset.ResourceSet
+      - jp.ngt.rtm.modelpack.state.DataEntry
+      - jp.ngt.rtm.modelpack.state.DataEntryVec
+      - jp.ngt.rtm.modelpack.state.DataMap
       - jp.ngt.rtm.modelpack.state.ResourceState
+      - jp.ngt.rtm.network.PacketFormation
+      - jp.ngt.rtm.network.PacketMarker
       - jp.ngt.rtm.network.PacketMarkerRPClient
       - jp.ngt.rtm.network.PacketModelPack
+      - jp.ngt.rtm.network.PacketMoveMM
+      - jp.ngt.rtm.network.PacketMovingMachine
+      - jp.ngt.rtm.network.PacketNoticeHandlerClient
+      - jp.ngt.rtm.network.PacketNoticeHandlerServer
+      - jp.ngt.rtm.network.PacketPlaySound
+      - jp.ngt.rtm.network.PacketRTMKey
+      - jp.ngt.rtm.network.PacketSelectResource
+      - jp.ngt.rtm.network.PacketSetTrainState
+      - jp.ngt.rtm.network.PacketSignal
+      - jp.ngt.rtm.network.PacketSignalConverter
+      - jp.ngt.rtm.network.PacketSyncItem
+      - jp.ngt.rtm.network.PacketVehicleMovement
       - jp.ngt.rtm.rail.BlockLargeRailBase
       - jp.ngt.rtm.rail.BlockMarker
       - jp.ngt.rtm.rail.RenderMarkerBlock

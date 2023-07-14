@@ -57,12 +57,12 @@
 +
 +   public void makeRailMap(TileEntityMarker marker, EntityPlayer player, int x, int y, int z) {
 +      this.onMarkerActivated(marker.getWorld(), x, y, z, player, false);
-+   }
-+
-+   public void makeRailMap(TileEntityMarker marker, Integer entityId, int x, int y, int z) {
-+      this.onMarkerActivated(marker.getWorld(), x, y, z, null, entityId, false);
     }
  
++   public void makeRailMap(TileEntityMarker marker, Integer entityId, int x, int y, int z) {
++      this.onMarkerActivated(marker.getWorld(), x, y, z, null, entityId, false);
++   }
++
     public boolean onMarkerActivated(World world, int x, int y, int z, EntityPlayer player, boolean makeRail) {
 +      Integer entityId = null;
 +      if (player != null) entityId = player.getEntityId();
@@ -245,3 +245,23 @@
              BlockUtil.setBlock(world, i, j, k, RTMRail.TURNTABLE_CORE, 0, 3);
              TileEntityTurnTableCore tileentityturntablecore = (TileEntityTurnTableCore)BlockUtil.getTileEntity(world, i, j, k);
              tileentityturntablecore.setRailPositions(new RailPosition[]{start, end});
+@@ -379,10 +424,19 @@
+ 
+          return null;
+       }
+    }
+ 
++   @Override
++   protected ItemStack getItem(int damage) {
++      if (com.anatawa12.fixRtm.asm.config.MainConfig.mergeMarker) {
++         return new ItemStack(this, 1, 8);
++      } else {
++         return new ItemStack(this, 1, damage & 4);
++      }
++   }
++
+    public static enum MarkerType {
+       STANDARD(16711680),
+       SWITCH(255);
+ 
+       public final int color;
