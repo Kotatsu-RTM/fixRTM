@@ -1,18 +1,6 @@
 --- a/jp/ngt/rtm/block/BlockTurnstile.java
 +++ b/jp/ngt/rtm/block/BlockTurnstile.java
-@@ -16,10 +16,11 @@
- import net.minecraft.pathfinding.PathNodeType;
- import net.minecraft.tileentity.TileEntity;
- import net.minecraft.util.EnumFacing;
- import net.minecraft.util.math.AxisAlignedBB;
- import net.minecraft.util.math.BlockPos;
-+import net.minecraft.util.math.RayTraceResult;
- import net.minecraft.world.IBlockAccess;
- import net.minecraft.world.World;
- 
- public class BlockTurnstile extends BlockMachineBase {
-    private static final float MAX_Y = 1.5F;
-@@ -113,6 +114,11 @@
+@@ -113,6 +113,11 @@
     }
  
     public PathNodeType getAiPathNodeType(IBlockState state, IBlockAccess world, BlockPos pos) {
@@ -20,7 +8,7 @@
     }
 +
 +   @Override
-+   public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
++   public ItemStack getPickBlock(IBlockState state, net.minecraft.util.math.RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
 +      return com.anatawa12.fixRtm.rtm.block.BlockOrnamentMain.getPickBlock(world, pos, ItemInstalledObject.IstlObjType.TURNSTILE);
 +   }
  }

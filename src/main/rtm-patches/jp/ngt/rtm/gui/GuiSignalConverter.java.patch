@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/gui/GuiSignalConverter.java
 +++ b/jp/ngt/rtm/gui/GuiSignalConverter.java
-@@ -5,16 +5,17 @@
+@@ -5,11 +5,10 @@
  import jp.ngt.rtm.RTMCore;
  import jp.ngt.rtm.electric.SignalConverterType;
  import jp.ngt.rtm.electric.TileEntitySignalConverter;
@@ -12,14 +12,7 @@
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
  
-+import java.io.IOException;
-+
- @SideOnly(Side.CLIENT)
- public class GuiSignalConverter extends GuiScreenCustom {
-    private final TileEntitySignalConverter tileEntity;
-    private final SignalConverterType scType;
-    private GuiButton button;
-@@ -27,12 +28,12 @@
+@@ -27,12 +26,12 @@
     }
  
     public void initGui() {
@@ -34,7 +27,7 @@
           TileEntitySignalConverter.ComparatorType tileentitysignalconverter$comparatortype = this.tileEntity.getComparator();
           this.comparatorIndex = tileentitysignalconverter$comparatortype.id;
           this.button = new GuiButton(100, this.width / 2 - 36, 60, 30, 20, tileentitysignalconverter$comparatortype.operator);
-@@ -41,23 +42,23 @@
+@@ -41,23 +40,23 @@
        }
  
        int[] aint = this.tileEntity.getSignalLevel();
@@ -63,7 +56,7 @@
           this.button.displayString = TileEntitySignalConverter.ComparatorType.getType(this.comparatorIndex).operator;
        }
  
-@@ -92,21 +93,15 @@
+@@ -92,21 +91,15 @@
        }
  
        return aint;
@@ -78,7 +71,7 @@
 -         this.currentTextField.textboxKeyTyped(par1, par2);
 -      }
 -
-+   protected void keyTyped(char par1, int par2) throws IOException {
++   protected void keyTyped(char par1, int par2) throws java.io.IOException {
        if (par2 == 28) {
           this.formatSignalLevel();
 +      } else {
@@ -88,7 +81,7 @@
     }
  
     public void drawScreen(int par1, int par2, float par3) {
-@@ -118,10 +113,8 @@
+@@ -118,10 +111,8 @@
           this.drawCenteredString(this.fontRenderer, "RS_OFF", this.width / 2, 85, 16777215);
        } else if (this.scType == SignalConverterType.RSOut) {
           this.drawCenteredString(this.fontRenderer, "Input signal level", this.width / 2, 40, 16777215);

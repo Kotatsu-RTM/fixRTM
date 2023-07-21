@@ -15,7 +15,20 @@
  import net.minecraftforge.common.config.Configuration;
  import net.minecraftforge.common.config.Property;
  import net.minecraftforge.fml.common.FMLLog;
-@@ -161,12 +161,11 @@
+@@ -23,10 +23,12 @@
+ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+ import net.minecraftforge.fml.common.network.NetworkRegistry;
+ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+ import org.apache.logging.log4j.Level;
+ 
++// marked as modified to check RTM version with patch system
++
+ @Mod(
+    modid = "rtm",
+    name = "RealTrainMod",
+    version = "2.4.24",
+    acceptedMinecraftVersions = "[1.12.2]"
+@@ -161,12 +163,11 @@
        RTMRecipe.init();
        RTMPacket.init();
        RTMAdvancement.init();

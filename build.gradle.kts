@@ -6,11 +6,11 @@ import com.anatawa12.jarInJar.gradle.TargetPreset
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    kotlin("jvm") version "1.8.22"
+    kotlin("jvm") version "1.9.0"
     id("net.minecraftforge.gradle")
-    id("com.anatawa12.mod-patching.binary") version "2.1.5"
-    id("com.anatawa12.mod-patching.source") version "2.1.5"
-    id("com.anatawa12.mod-patching.resources-dev") version "2.1.5"
+    id("com.anatawa12.mod-patching.binary") version "2.1.8"
+    id("com.anatawa12.mod-patching.source") version "2.1.8"
+    id("com.anatawa12.mod-patching.resources-dev") version "2.1.8"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.anatawa12.jarInJar") version "1.0.3"
 }
@@ -46,7 +46,7 @@ dependencies {
     "minecraft"("net.minecraftforge:forge:1.12.2-14.23.5.2860")
 
     shade(kotlin("stdlib-jdk7"))
-    shade("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    shade("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
     shade("io.sigpipe:jbsdiff:1.0")
     shade("com.anatawa12.sai:sai:0.0.2")
     shade("org.jetbrains:annotations:24.0.1")
@@ -141,13 +141,15 @@ val runServer = minecraft.runs.create("server") {
 }
 
 val jar by tasks.getting(Jar::class) {
-    shade.forEach { dep ->
-        from(project.zipTree(dep)) {
-            exclude("META-INF", "META-INF/**")
-            exclude("LICENSE.txt")
-        }
-        from(project.zipTree(dep)) {
-            include("META-INF/services/**")
+    afterEvaluate {
+        shade.forEach { dep ->
+            from(project.zipTree(dep)) {
+                exclude("META-INF", "META-INF/**")
+                exclude("LICENSE.txt")
+            }
+            from(project.zipTree(dep)) {
+                include("META-INF/services/**")
+            }
         }
     }
 

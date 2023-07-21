@@ -25,7 +25,7 @@
  import net.minecraft.entity.player.EntityPlayer;
  import net.minecraft.item.ItemStack;
  import net.minecraft.nbt.NBTTagCompound;
-@@ -42,41 +41,36 @@
+@@ -42,41 +41,37 @@
  import net.minecraft.network.datasync.EntityDataManager;
  import net.minecraft.util.DamageSource;
  import net.minecraft.util.EnumHand;
@@ -44,6 +44,7 @@
     private static final DataParameter<Integer> BOGIE_ID0 = EntityDataManager.createKey(EntityTrainBase.class, DataSerializers.VARINT);
     private static final DataParameter<Integer> BOGIE_ID1 = EntityDataManager.createKey(EntityTrainBase.class, DataSerializers.VARINT);
 +   private static final DataParameter<Float> TRAIN_SPEED = EntityDataManager.createKey(EntityTrainBase.class, DataSerializers.FLOAT);
++   private static final DataParameter<Boolean> CAB_DIRECTION = EntityDataManager.createKey(EntityTrainBase.class, DataSerializers.BOOLEAN);
     public static final short MAX_AIR_COUNT = 2880;
     public static final short MIN_AIR_COUNT = 2480;
     public static final float TRAIN_WIDTH = 2.75F;
@@ -72,13 +73,14 @@
        this.setSize(2.75F, 1.1875F);
        this.noClip = true;
     }
-@@ -92,17 +86,24 @@
+@@ -92,51 +87,69 @@
  
     protected void entityInit() {
        super.entityInit();
        this.getDataManager().register(BOGIE_ID0, 0);
        this.getDataManager().register(BOGIE_ID1, 0);
 +      this.getDataManager().register(TRAIN_SPEED, 0.0f);
++      this.getDataManager().register(CAB_DIRECTION, false);
     }
  
     protected void writeEntityToNBT(NBTTagCompound nbt) {
@@ -96,11 +98,12 @@
 +      }
 +
        nbt.setInteger("trainDir", this.getTrainDirection());
++      nbt.setBoolean("cabDir", this.getDataManager().get(CAB_DIRECTION));
     }
  
     private void writeFormationData(NBTTagCompound nbt) {
        if (this.formation != null) {
-@@ -110,33 +111,41 @@
+          FormationEntry formationentry = this.formation.getEntry(this);
           if (formationentry != null) {
              nbt.setLong("FormationId", this.formation.id);
              nbt.setByte("EntryPos", formationentry.entryId);
@@ -115,6 +118,7 @@
        NBTTagCompound nbttagcompound = nbt.getCompoundTag("FormationEntry");
        this.readFormationData(nbttagcompound);
        this.setTrainDirection(nbt.getInteger("trainDir"));
++      this.getDataManager().set(CAB_DIRECTION, nbt.getBoolean("cabDir"));
     }
  
 -   private void readFormationData(NBTTagCompound nbt) {
@@ -145,7 +149,7 @@
     public Entity[] getParts() {
        return null;
     }
-@@ -150,34 +159,43 @@
+@@ -150,34 +163,43 @@
     }
  
     public void setDead() {
@@ -191,7 +195,7 @@
     }
  
     protected void updateFallState() {
-@@ -293,25 +311,25 @@
+@@ -293,25 +315,25 @@
           float f = this.getSpeed();
           int i = this.getNotch();
           Random random = this.world.rand;
@@ -221,7 +225,7 @@
                 double d6 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 double d7 = (random.nextDouble() * 2.0D - 1.0D) * d5;
                 this.world.spawnParticle(enumparticletypes, d2, d3, d4, d6, 0.25D, d7, new int[0]);
-@@ -409,63 +427,11 @@
+@@ -409,63 +431,11 @@
        }
  
     }
@@ -286,7 +290,20 @@
     public void setPositionAndRotation(double x, double y, double z, float yaw, float pitch) {
        this.setPosition(x, y, z);
        this.setRotation(yaw, pitch);
-@@ -565,16 +531,24 @@
+@@ -506,11 +476,11 @@
+    public Vec3 getRiderPos(Entity passenger) {
+       return super.getRiderPos(passenger).add(0.0D, this.getMountedYOffset(), 0.0D);
+    }
+ 
+    protected int getRiderPosIndex() {
+-      return this.getTrainDirection();
++      return this.getCabDirection();
+    }
+ 
+    public double getMountedYOffset() {
+       return (double)(this.height + 1.1875F - 0.93F);
+    }
+@@ -565,16 +535,24 @@
  
           return true;
        }
@@ -313,7 +330,7 @@
              NGTLog.sendChatMessage(player, "message.train.deconcatenation", new Object[0]);
           }
        }
-@@ -583,25 +557,36 @@
+@@ -583,25 +561,42 @@
  
     protected void mountMotorman(EntityBogie bogie, EntityPlayer player, ItemStack stack) {
        int i = bogie.getBogieId();
@@ -344,17 +361,23 @@
     private void mountEntityToTrain(Entity entity, int direction) {
 -      if (this.getTrainDirection() != direction) {
 -         this.setSpeed(-this.getSpeed());
-+      if (this.getSpeed() == 0.0F) {
++      if (this.isControlCar()) {
 +         this.setTrainDirection(direction);
++         if (this.formation != null && this.formation.size() > 1) {
++            byte data = this.getVehicleState(TrainState.TrainStateType.Role);
++            byte newData = this.getCabDirection() == this.getTrainDirection() ? data : (byte) (data ^ 2);
++            this.setTrainStateData_NoSync(TrainState.TrainStateType.Role, newData);
++         }
        }
  
 -      this.setTrainDirection(direction);
++      setCabDirection(direction);
        entity.startRiding(this);
     }
  
     protected void removePassengerFromVehicle(Entity passenger) {
        Entity entity = this.getBogie(this.getTrainDirection());
-@@ -655,11 +640,11 @@
+@@ -655,11 +650,11 @@
        if (!this.world.isRemote && par2.getTrain() != null) {
           int i = par1.getBogieId();
           int j = par2.getBogieId();
@@ -367,7 +390,7 @@
                 entityplayer = (EntityPlayer)this.getFirstPassenger();
              } else if (par2.getTrain().getFirstPassenger() instanceof EntityPlayer) {
                 entityplayer = (EntityPlayer)par2.getTrain().getFirstPassenger();
-@@ -672,38 +657,38 @@
+@@ -672,38 +667,38 @@
        }
  
     }
@@ -411,7 +434,20 @@
     public boolean existBogies() {
        return this.getBogie(0) != null && this.getBogie(1) != null;
     }
-@@ -760,10 +745,11 @@
+@@ -755,15 +750,24 @@
+ 
+    public void setFormation(Formation par1) {
+       this.formation = par1;
+    }
+ 
++   public int getCabDirection() {
++      return this.getDataManager().get(CAB_DIRECTION) ? 1 : 0;
++   }
++
++   private void setCabDirection(int direction) {
++      this.getDataManager().set(CAB_DIRECTION, direction != 0);
++   }
++
     public int getTrainDirection() {
        return this.getVehicleState(TrainState.TrainStateType.Direction);
     }
@@ -423,7 +459,7 @@
        } else {
           this.formation.setTrainDirection((byte)par1, this);
        }
-@@ -793,33 +779,46 @@
+@@ -793,33 +797,46 @@
     public boolean addNotch(Entity driver, int par2) {
        if (par2 != 0) {
           int i = this.getNotch();
@@ -475,7 +511,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +873,49 @@
+@@ -874,81 +891,49 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
@@ -502,12 +538,9 @@
 -         ForgeChunkManager.releaseTicket(this.ticket);
 -         this.ticket = null;
 -      }
+-
 +   public boolean getAutoLinkingState() {
 +      return autoLinkingState;
-+   }
- 
-+   public void setAutoLinkingState(boolean state) {
-+      autoLinkingState = state;
     }
  
 -   private boolean requestTicket() {
@@ -522,6 +555,14 @@
 -      } else {
 -         NGTLog.debug("[RTM] Failed to get ticket (Chunk Loader)");
 -         return false;
+-      }
++   public void setAutoLinkingState(boolean state) {
++      autoLinkingState = state;
+    }
+ 
+-   public void setChunkTicket(Ticket par1) {
+-      if (this.ticket != par1) {
+-         ForgeChunkManager.releaseTicket(this.ticket);
 +   private void updateAutoLinkingState() {
 +      if (!autoLinkingState) return;
 +
@@ -529,26 +570,16 @@
 +         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
 +         return;
        }
--   }
- 
--   public void setChunkTicket(Ticket par1) {
--      if (this.ticket != par1) {
--         ForgeChunkManager.releaseTicket(this.ticket);
-+      if (getSpeed() > 15.0F / 72) {
-+         setNotch(0);
-+         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
-       }
-+   }
  
 -      this.ticket = par1;
 -   }
-+   @Override
-+   public void onAddedToWorld() {
-+      bogieController.setupBogies(this);
- 
+-
 -   public void forceChunkLoading() {
 -      this.forceChunkLoading(this.chunkCoordX, this.chunkCoordZ);
-+      super.onAddedToWorld();
++      if (getSpeed() > 15.0F / 72) {
++         setNotch(0);
++         setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 0);
++      }
     }
  
 -   public void forceChunkLoading(int x, int z) {
@@ -557,29 +588,34 @@
 -            return;
 -         }
 +   @Override
-+   public void onRemovedFromWorld() {
-+      super.onRemovedFromWorld();
++   public void onAddedToWorld() {
++      bogieController.setupBogies(this);
  
 -         if (x != this.prevChunkCoordX || z != this.prevChunkCoordZ) {
 -            this.setupChunks(x, z);
 -         }
-+      EntityBogie bogie0 = getBogie(0);
-+      if (bogie0 != null) bogie0.setDead();
++      super.onAddedToWorld();
++   }
  
 -         for(ChunkPos chunkpos : this.loadedChunks) {
 -            ForgeChunkManager.forceChunk(this.ticket, chunkpos);
 -         }
--
++   @Override
++   public void onRemovedFromWorld() {
++      super.onRemovedFromWorld();
+ 
 -         ChunkPos chunkpos1 = new ChunkPos(x, z);
 -         ForgeChunkManager.forceChunk(this.ticket, chunkpos1);
 -      }
--
--   }
++      EntityBogie bogie0 = getBogie(0);
++      if (bogie0 != null) bogie0.setDead();
+ 
++      EntityBogie bogie1 = getBogie(1);
++      if (bogie1 != null) bogie1.setDead();
+    }
 -
 -   private void setupChunks(int xChunk, int zChunk) {
 -      int i = this.getVehicleState(TrainState.TrainStateType.ChunkLoader);
 -      RTMChunkManager.INSTANCE.getChunksAround(this.loadedChunks, xChunk, zChunk, i);
-+      EntityBogie bogie1 = getBogie(1);
-+      if (bogie1 != null) bogie1.setDead();
-    }
+-   }
  }
