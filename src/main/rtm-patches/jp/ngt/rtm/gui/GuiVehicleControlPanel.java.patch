@@ -91,14 +91,15 @@
           this.currentScroll = 0.0F;
           this.sendTabPacket(this.selectedTabIndex);
        }
-@@ -199,16 +204,40 @@
+@@ -198,17 +203,41 @@
+       String s = "setTrainTab," + tabIndex;
        RTMCore.NETWORK_WRAPPER.sendToServer(new PacketNotice((byte)0, s, this.player));
     }
  
     protected void drawGuiContainerForegroundLayer(int p_146979_1_, int p_146979_2_) {
-       TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
--      if (tabtraincontrolpanel != null) {
-+      /*if (tabtraincontrolpanel != null) {
+-      TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
++      /*TabTrainControlPanel tabtraincontrolpanel = TabTrainControlPanel.tabArray[this.selectedTabIndex];
+       if (tabtraincontrolpanel != null) {
           GL11.glDisable(3042);
 -      }
 +      }*/

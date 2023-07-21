@@ -134,7 +134,7 @@
           this.direction = (byte)(par1 ^ formationentry.dir);
           byte b0 = 0;
  
-@@ -265,35 +280,50 @@
+@@ -265,35 +280,51 @@
  
        }
     }
@@ -177,6 +177,7 @@
 +         }
 +      } else if (type == TrainState.TrainStateType.AutoLinking) {
 +         for (FormationEntry formationentry : this.entries) {
++            if (formationentry == null) continue;
 +            formationentry.train.setAutoLinkingState(data > 0);
 +         }
 +      } else {
