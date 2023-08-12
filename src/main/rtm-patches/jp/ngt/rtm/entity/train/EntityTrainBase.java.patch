@@ -303,7 +303,7 @@
     public double getMountedYOffset() {
        return (double)(this.height + 1.1875F - 0.93F);
     }
-@@ -565,16 +535,24 @@
+@@ -565,16 +535,25 @@
  
           return true;
        }
@@ -318,6 +318,7 @@
 -            NGTLog.sendChatMessage(player, "message.train.concatenation_mode", new Object[0]);
 +            if (player.isSneaking()) {
 +               this.setTrainDirection(i);
++               this.setCabDirection(i);
 +               this.setVehicleState(TrainState.TrainStateType.Role, (byte) 0);
 +               this.setVehicleState(TrainState.TrainStateType.AutoLinking, (byte) 1);
 +               this.setNotch(1);
@@ -330,7 +331,7 @@
              NGTLog.sendChatMessage(player, "message.train.deconcatenation", new Object[0]);
           }
        }
-@@ -583,25 +561,42 @@
+@@ -583,25 +562,42 @@
  
     protected void mountMotorman(EntityBogie bogie, EntityPlayer player, ItemStack stack) {
        int i = bogie.getBogieId();
@@ -377,7 +378,7 @@
  
     protected void removePassengerFromVehicle(Entity passenger) {
        Entity entity = this.getBogie(this.getTrainDirection());
-@@ -655,11 +650,11 @@
+@@ -655,11 +651,11 @@
        if (!this.world.isRemote && par2.getTrain() != null) {
           int i = par1.getBogieId();
           int j = par2.getBogieId();
@@ -390,7 +391,7 @@
                 entityplayer = (EntityPlayer)this.getFirstPassenger();
              } else if (par2.getTrain().getFirstPassenger() instanceof EntityPlayer) {
                 entityplayer = (EntityPlayer)par2.getTrain().getFirstPassenger();
-@@ -672,38 +667,38 @@
+@@ -672,38 +668,38 @@
        }
  
     }
@@ -434,7 +435,7 @@
     public boolean existBogies() {
        return this.getBogie(0) != null && this.getBogie(1) != null;
     }
-@@ -755,15 +750,24 @@
+@@ -755,15 +751,24 @@
  
     public void setFormation(Formation par1) {
        this.formation = par1;
@@ -459,7 +460,7 @@
        } else {
           this.formation.setTrainDirection((byte)par1, this);
        }
-@@ -793,33 +797,46 @@
+@@ -793,33 +798,46 @@
     public boolean addNotch(Entity driver, int par2) {
        if (par2 != 0) {
           int i = this.getNotch();
@@ -511,7 +512,7 @@
     }
  
     public void setSignal(int par1) {
-@@ -874,81 +891,49 @@
+@@ -874,81 +892,49 @@
  
     public ItemStack getPickedResult(RayTraceResult target) {
        return ItemTrain.convertFormationAsItem(this);
