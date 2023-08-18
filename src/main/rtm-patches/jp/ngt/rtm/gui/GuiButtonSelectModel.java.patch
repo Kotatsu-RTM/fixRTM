@@ -74,7 +74,7 @@
     private final float getScale(float[] box) {
        float f = box[3] - box[0];
        float f1 = box[4] - box[1];
-@@ -79,14 +80,14 @@
+@@ -79,33 +80,33 @@
     }
  
     protected void renderButtonOverlay(Minecraft mc) {
@@ -92,9 +92,11 @@
     private final void preRenderModelInGui(Minecraft mc) {
        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
        GL11.glPushMatrix();
-@@ -95,17 +96,17 @@
+       GL11.glMatrixMode(5889);
+       GL11.glPushMatrix();
        GL11.glLoadIdentity();
-       Project.gluPerspective(80.0F, 1.0F, 5.0F, 500.0F);
+-      Project.gluPerspective(80.0F, 1.0F, 5.0F, 500.0F);
++      Project.gluPerspective(80.0F, (float) mc.displayWidth / (float) mc.displayHeight, 5.0F, 500.0F);
        GL11.glMatrixMode(5888);
        GL11.glLoadIdentity();
        RenderHelper.enableStandardItemLighting();
