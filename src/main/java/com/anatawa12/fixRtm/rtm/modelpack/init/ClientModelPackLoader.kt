@@ -17,12 +17,9 @@ import net.minecraft.crash.CrashReport
 import net.minecraftforge.fml.common.ProgressManager
 import net.minecraftforge.fml.common.ProgressManager.ProgressBar
 import org.apache.logging.log4j.LogManager
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 object ClientModelPackLoader {
     private val logger = LogManager.getLogger("fixRTM/ClientModelPackLoader")
-    private val lock = ReentrantLock()
 
     fun load() {
         loadModels()
@@ -133,33 +130,34 @@ object ClientModelPackLoader {
         val progress = ProgressManager.push("Construct Model", unConstructSets.size)
         val size = unConstructSets.size
 
-        runBlocking {
-            val asynchronousLoadingModels =
-                unConstructSets
-                    .filter { !it.config.synchronousLoading }
-                    .map {
-                        CoroutineScope(Dispatchers.Default).async {
-                            construct(progress, it, ++i, size)
-                        }
-                    }
-
+        val asynchronousLoadingModels =
             unConstructSets
-                .filter { it.config.synchronousLoading }
-                .forEach {
-                    construct(progress, it, ++i, size)
+                .filter { !it.config.synchronousLoading }
+                .map {
+                    it.config.name to CoroutineScope(Dispatchers.Default).async {
+                        construct(it, ++i, size)
+                    }
                 }
+                .toMutableList()
 
-            asynchronousLoadingModels.forEach { it.await() }
+        unConstructSets
+            .filter { it.config.synchronousLoading }
+            .forEach {
+                construct(it, ++i, size)
+                progress.step(it.config.name)
+            }
+
+        while (asynchronousLoadingModels.isNotEmpty()) {
+            val loadedModels = asynchronousLoadingModels.filter { it.second.isCompleted }
+            asynchronousLoadingModels -= loadedModels
+            loadedModels.forEach { progress.step(it.first) }
         }
 
         ProgressManager.pop(progress)
     }
 
-    private fun construct(progress: ProgressBar, resourceSet: ResourceSet<*>, index: Int, size: Int) {
+    private fun construct(resourceSet: ResourceSet<*>, index: Int, size: Int) {
         try {
-            //progress.step(resourceSet.config.name)
-            stepBar(progress, resourceSet.config.name)
-
             resourceSet.constructOnClient()
             resourceSet.finishConstruct()
             resourceSet.state = ModelState.CONSTRUCTED
@@ -181,12 +179,6 @@ object ClientModelPackLoader {
                     Minecraft.getMinecraft().addGraphicsAndWorldToCrashReport(this)
                 }
                 .let { report -> Minecraft.getMinecraft().displayCrashReport(report) }
-        }
-    }
-
-    private fun stepBar(bar: ProgressBar, message: String) {
-        lock.withLock {
-            bar.step(message)
         }
     }
 
