@@ -11,6 +11,7 @@ import com.anatawa12.fixRtm.crash.RTMSmallModelPackInfoCrashCallable
 import com.anatawa12.fixRtm.gui.GuiHandler
 import com.anatawa12.fixRtm.io.FIXFileLoader
 import com.anatawa12.fixRtm.network.NetworkHandler
+import com.anatawa12.fixRtm.ngtlib.util.VersionChecker
 import com.anatawa12.fixRtm.rtm.modelpack.init.ClientModelPackLoader
 import com.anatawa12.fixRtm.rtm.modelpack.modelset.dummies.*
 import com.anatawa12.fixRtm.scripting.loadFIXScriptUtil
@@ -47,8 +48,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.PlayerEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
+import net.minecraftforge.fml.common.network.FMLNetworkEvent
 import net.minecraftforge.fml.common.network.NetworkRegistry
 import net.minecraftforge.fml.relauncher.Side
+import net.minecraftforge.fml.relauncher.SideOnly
 import paulscode.sound.SoundSystemConfig
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -148,7 +151,10 @@ object FixRtm {
     @Mod.EventHandler
     @Suppress("UNUSED_PARAMETER")
     fun init(e: FMLInitializationEvent) {
-        if (e.side.isClient) ClientModelPackLoader.load()
+        if (e.side.isClient) {
+            ClientModelPackLoader.load()
+            VersionChecker.check()
+        }
     }
 
     @SubscribeEvent
@@ -208,6 +214,12 @@ object FixRtm {
     }
     //assets/rtm/models/item/item_train_127.json
     //                       item_train_fixrtm_test
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    fun onPlayerConnected(event: FMLNetworkEvent.ClientConnectedToServerEvent) {
+        VersionChecker.notifyUpdates()
+    }
 
     @SubscribeEvent
     fun onPlayerLoggedIn(e: PlayerEvent.PlayerLoggedInEvent) {

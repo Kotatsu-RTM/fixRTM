@@ -10,10 +10,12 @@ mods:
     source-jar: curse/ngtlib/2.4.21/ngtlib-2.4.21-stable-39-deobf-1.5.498.12-sources.jar
     deobf-jar: curse/ngtlib/2.4.21/ngtlib-2.4.21-stable-39-deobf.jar
     changed-classes:
+      - jp.ngt.ngtlib.ClientProxy
       - jp.ngt.ngtlib.NGTCore
       - jp.ngt.ngtlib.block.TileEntityCustom
       - jp.ngt.ngtlib.block.TileEntityPlaceable
       - jp.ngt.ngtlib.command.CommandPermit
+      - jp.ngt.ngtlib.event.NGTEventHandler
       - jp.ngt.ngtlib.gui.GuiContainerCustom
       - jp.ngt.ngtlib.gui.GuiScreenCustom
       - jp.ngt.ngtlib.gui.GuiTextFieldCustom

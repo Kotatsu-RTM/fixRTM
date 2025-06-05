@@ -1,0 +1,41 @@
+--- a/jp/ngt/ngtlib/ClientProxy.java
++++ b/jp/ngt/ngtlib/ClientProxy.java
+@@ -1,14 +1,15 @@
+ package jp.ngt.ngtlib;
+ 
+ import java.io.File;
++
++import com.anatawa12.fixRtm.ngtlib.util.VersionChecker;
+ import jp.ngt.ngtlib.event.NGTEventHandlerClient;
+ import jp.ngt.ngtlib.gui.GuiWarning;
+ import jp.ngt.ngtlib.util.NGTUtil;
+ import jp.ngt.ngtlib.util.NGTUtilClient;
+ import jp.ngt.ngtlib.util.PackInfo;
+-import jp.ngt.ngtlib.util.VersionChecker;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.EntityRenderer;
+ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.util.math.BlockPos;
+@@ -43,19 +44,19 @@
+       return NGTUtilClient.getMinecraft().getSession().getPlayerID();
+    }
+ 
+    public void preInit() {
+       if (NGTCore.versionCheck) {
+-         VersionChecker.addToCheckList(new PackInfo(NGTCore.metadata.name, NGTCore.metadata.url, NGTCore.metadata.updateUrl, NGTCore.metadata.version));
++         PackInfo packInfo = new PackInfo(NGTCore.metadata.name, NGTCore.metadata.url, NGTCore.metadata.updateUrl, NGTCore.metadata.version);
++         VersionChecker.INSTANCE.addTargetPack(packInfo);
+       }
+ 
+       MinecraftForge.EVENT_BUS.register(NGTEventHandlerClient.INSTANCE);
+       ModelLoader.setCustomModelResourceLocation(NGTCore.protection_key, 0, new ModelResourceLocation("ngtlib:protection_key", "inventory"));
+    }
+ 
+    public void postInit() {
+-      VersionChecker.checkVersion();
+    }
+ 
+    public void removeGuiWarning() {
+       MinecraftForge.EVENT_BUS.unregister(GUI_WARNING);
+    }

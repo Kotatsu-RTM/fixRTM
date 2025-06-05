@@ -1,0 +1,14 @@
+--- a/jp/ngt/ngtlib/event/NGTEventHandler.java
++++ b/jp/ngt/ngtlib/event/NGTEventHandler.java
+@@ -44,11 +44,10 @@
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public void onClientConnected(final ClientConnectedToServerEvent event) {
+       TickProcessQueue.getInstance(Side.CLIENT).add(new TickProcessEntry() {
+          public boolean process(World world) {
+-            VersionChecker.showUpdateMessage((INetHandlerPlayClient)event.getHandler());
+             CommandUsage.showUsage();
+             return true;
+          }
+       });
+    }

@@ -1,18 +1,31 @@
 --- a/jp/ngt/rtm/ClientProxy.java
 +++ b/jp/ngt/rtm/ClientProxy.java
-@@ -2,10 +2,12 @@
+@@ -2,10 +2,13 @@
  
  import java.io.File;
  import java.io.IOException;
  import java.util.ArrayList;
  import java.util.List;
 +
-+import com.anatawa12.fixRtm.rtm.modelpack.init.ClientModelPackLoader;
++import com.anatawa12.fixRtm.Loggers;
++import com.anatawa12.fixRtm.ngtlib.util.VersionChecker;
  import jp.ngt.ngtlib.io.NGTFileLoader;
  import jp.ngt.ngtlib.io.NGTJson;
  import jp.ngt.ngtlib.io.NGTLog;
  import jp.ngt.ngtlib.io.NGTText;
  import jp.ngt.ngtlib.item.ItemRenderHandler;
+@@ -13,11 +16,10 @@
+ import jp.ngt.ngtlib.sound.MovingSoundCustom;
+ import jp.ngt.ngtlib.sound.NGTSound;
+ import jp.ngt.ngtlib.util.NGTUtil;
+ import jp.ngt.ngtlib.util.NGTUtilClient;
+ import jp.ngt.ngtlib.util.PackInfo;
+-import jp.ngt.ngtlib.util.VersionChecker;
+ import jp.ngt.rtm.block.ParticleSpark;
+ import jp.ngt.rtm.block.tileentity.RenderDecoration;
+ import jp.ngt.rtm.entity.EntityMeltedMetalFX;
+ import jp.ngt.rtm.entity.train.EntityTrainBase;
+ import jp.ngt.rtm.entity.train.parts.EntityArtillery;
 @@ -27,11 +29,10 @@
  import jp.ngt.rtm.entity.vehicle.IUpdateVehicle;
  import jp.ngt.rtm.event.RTMEventHandlerClient;
@@ -25,8 +38,48 @@
  import jp.ngt.rtm.rail.TileEntityLargeRailCore;
  import jp.ngt.rtm.sound.MovingSoundMaker;
  import jp.ngt.rtm.sound.SoundUpdaterTrain;
-@@ -87,12 +88,10 @@
-          VersionChecker.addToCheckList(new PackInfo(RTMCore.metadata.name, RTMCore.metadata.url, RTMCore.metadata.updateUrl, RTMCore.metadata.version));
+@@ -45,18 +46,20 @@
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.world.World;
+ import net.minecraftforge.common.MinecraftForge;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import org.apache.logging.log4j.Logger;
+ 
+ @SideOnly(Side.CLIENT)
+ public class ClientProxy extends CommonProxy {
+    public static final byte ViewMode_Artillery = 0;
+    public static final byte ViewMode_SR = 1;
+    public static final byte ViewMode_AMR = 2;
+    public static final byte ViewMode_NVD = 3;
+    public static final byte ViewMode_Camera = 4;
++   private static final Logger LOGGER = Loggers.INSTANCE.getLogger("RTM-ClientProxy");
+    private final ModelBase missing = new ModelMissing();
+    private final ResourceLocation texture = new ResourceLocation("rtm", "textures/missing.png");
+    private byte connectionState = 0;
+    private final FormationManager fmClient = new FormationManager(true);
+    private List<TileEntityLargeRailCore> unloadedRails = new ArrayList<>();
+@@ -73,26 +76,25 @@
+    private void versionCheck() {
+       if (RTMCore.versionCheck) {
+          for(File file1 : NGTFileLoader.findFile((filex) -> filex.getName().startsWith("pack") && filex.getName().endsWith(".json"))) {
+             try {
+                String s = NGTText.readText(file1, false, "UTF-8");
+-               PackInfo packinfo = (PackInfo)NGTJson.getObjectFromJson(s, PackInfo.class);
++               PackInfo packinfo = NGTJson.getObjectFromJson(s, PackInfo.class);
+                if (packinfo != null) {
+-                  VersionChecker.addToCheckList(packinfo);
++                  VersionChecker.INSTANCE.addTargetPack(packinfo);
+                }
+             } catch (IOException ioexception) {
+-               ioexception.printStackTrace();
++               LOGGER.error("IOException occurred", ioexception);
+             }
+          }
+ 
+-         VersionChecker.addToCheckList(new PackInfo(RTMCore.metadata.name, RTMCore.metadata.url, RTMCore.metadata.updateUrl, RTMCore.metadata.version));
++         PackInfo rtmPackInfo = new PackInfo(RTMCore.metadata.name, RTMCore.metadata.url, RTMCore.metadata.updateUrl, RTMCore.metadata.version);
++         VersionChecker.INSTANCE.addTargetPack(rtmPackInfo);
        }
     }
  
@@ -38,7 +91,7 @@
        RTMBlock.initClient2();
        RTMItem.initClient2();
        ItemRenderHandler.INSTANCE.register(RTMItem.decoration_block, new RenderDecoration());
-@@ -211,10 +210,11 @@
+@@ -211,10 +213,11 @@
     }
  
     public static void playSound(MovingSoundCustom sound, float vol, float pitch) {

@@ -1,34 +1,115 @@
 --- a/jp/ngt/ngtlib/util/VersionChecker.java
 +++ b/jp/ngt/ngtlib/util/VersionChecker.java
-@@ -26,12 +26,12 @@
+@@ -1,103 +1,24 @@
+ package jp.ngt.ngtlib.util;
+ 
+-import java.io.IOException;
+-import java.net.MalformedURLException;
+-import java.net.URL;
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
+-import jp.ngt.ngtlib.io.NGTLog;
+-import jp.ngt.ngtlib.io.NGTText;
++import com.anatawa12.fixRtm.Loggers;
+ import net.minecraft.network.play.INetHandlerPlayClient;
+-import net.minecraft.util.text.ITextComponent;
+-import net.minecraft.util.text.Style;
+-import net.minecraft.util.text.TextComponentTranslation;
+-import net.minecraft.util.text.TextFormatting;
+-import net.minecraft.util.text.event.ClickEvent;
+-import net.minecraft.util.text.event.ClickEvent.Action;
++import org.apache.logging.log4j.Logger;
+ 
+ public class VersionChecker {
+-   private static final VersionChecker checker = new VersionChecker();
+-   private List<PackInfo> checkList = new ArrayList<>();
+-   private List<String[]> updateList = new ArrayList<>();
+-   private boolean finished;
++   private static final Logger LOGGER = Loggers.INSTANCE.getLogger("NGT-VersionChecker");
+ 
++   @Deprecated
     public static void addToCheckList(PackInfo par1) {
-       checker.checkList.add(par1);
+-      checker.checkList.add(par1);
++      // MCTE compat
++      com.anatawa12.fixRtm.ngtlib.util.VersionChecker.INSTANCE.addTargetPack(par1);
++      LOGGER.debug("addToCheckList", new RuntimeException());
     }
  
     public static void checkVersion() {
 -      Thread thread = checker.new VersionCheckThread();
 -      thread.start();
-+      //Thread thread = checker.new VersionCheckThread();
-+      //thread.start();
++      LOGGER.error("Unsupported operation: checkVersion", new UnsupportedOperationException("checkVersion"));
     }
  
     public static void showUpdateMessage(INetHandlerPlayClient handler) {
-       if (checker.finished) {
-          for(String[] astring : checker.updateList) {
-@@ -74,14 +74,14 @@
-                   List<String> list1 = NGTText.readTextL(url.openStream(), "");
-                   list.addAll(list1);
-                } catch (MalformedURLException malformedurlexception) {
-                   NGTLog.debug("URL:" + s2);
-                   malformedurlexception.printStackTrace();
+-      if (checker.finished) {
+-         for(String[] astring : checker.updateList) {
+-            ITextComponent itextcomponent = new TextComponentTranslation("message.version", new Object[]{TextFormatting.AQUA + astring[0]});
+-            itextcomponent.appendText(" : " + TextFormatting.GREEN + astring[1]);
+-            if (astring[2] != null && !astring[2].isEmpty()) {
+-               ITextComponent itextcomponent1 = new TextComponentTranslation("  \u00a76\u00a7nDownload here", new Object[0]);
+-               itextcomponent1.setStyle((new Style()).setClickEvent(new ClickEvent(Action.OPEN_URL, astring[2])));
+-               itextcomponent.appendSibling(itextcomponent1);
+-            }
+-
+-            NGTLog.showChatMessage(itextcomponent);
+-         }
+-      }
+-
+-   }
+-
+-   public class VersionCheckThread extends Thread {
+-      public VersionCheckThread() {
+-         super("NGT Version Check");
+-      }
+-
+-      public void run() {
+-         List<String> list = new ArrayList<>();
+-         Map<String, String> map = new HashMap<>();
+-
+-         for(PackInfo packinfo : VersionChecker.checker.checkList) {
+-            if (map.containsKey(packinfo.name)) {
+-               String s = map.get(packinfo.name);
+-               if (!packinfo.version.equals(s)) {
+-                  VersionChecker.checker.updateList.add(new String[]{packinfo.name, s, packinfo.homepage});
+-                  continue;
+-               }
+-            }
+-
+-            String s2 = packinfo.updateURL;
+-            if (s2 != null && s2.length() != 0) {
+-               try {
+-                  URL url = new URL(s2);
+-                  List<String> list1 = NGTText.readTextL(url.openStream(), "");
+-                  list.addAll(list1);
+-               } catch (MalformedURLException malformedurlexception) {
+-                  NGTLog.debug("URL:" + s2);
+-                  malformedurlexception.printStackTrace();
 -                  return;
-+                  continue;
-                } catch (IOException ioexception) {
-                   ioexception.printStackTrace();
+-               } catch (IOException ioexception) {
+-                  ioexception.printStackTrace();
 -                  return;
-+                  continue;
-                }
- 
-                String[] astring1 = list.toArray(new String[list.size()]);
-                list.clear();
- 
+-               }
+-
+-               String[] astring1 = list.toArray(new String[list.size()]);
+-               list.clear();
+-
+-               for(String s1 : astring1) {
+-                  String[] astring = s1.split(":");
+-                  if (astring.length == 2) {
+-                     map.put(astring[0], astring[1]);
+-                     if (packinfo.name.equals(astring[0]) && !packinfo.version.equals(astring[1])) {
+-                        VersionChecker.checker.updateList.add(new String[]{packinfo.name, astring[1], packinfo.homepage});
+-                     }
+-                  }
+-               }
+-            }
+-         }
+-
+-         VersionChecker.checker.finished = true;
+-      }
++      LOGGER.error("Unsupported operation: showUpdateMessage", new UnsupportedOperationException("showMessage"));
+    }
+ }
