@@ -1,13 +1,45 @@
 --- a/jp/ngt/rtm/rail/TileEntityMarker.java
 +++ b/jp/ngt/rtm/rail/TileEntityMarker.java
-@@ -40,38 +40,65 @@
+@@ -1,9 +1,11 @@
+ package jp.ngt.rtm.rail;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.UUID;
++
+ import jp.ngt.ngtlib.block.BlockUtil;
+ import jp.ngt.ngtlib.block.TileEntityCustom;
+ import jp.ngt.ngtlib.io.NGTLog;
+ import jp.ngt.rtm.RTMBlock;
+ import jp.ngt.rtm.gui.InternalButton;
+@@ -14,16 +16,19 @@
+ import jp.ngt.rtm.rail.util.RailMap;
+ import jp.ngt.rtm.rail.util.RailMapBasic;
+ import jp.ngt.rtm.rail.util.RailMapCustom;
+ import jp.ngt.rtm.rail.util.RailPosition;
+ import jp.ngt.rtm.rail.util.SwitchType;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.util.ITickable;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
+ 
+ public class TileEntityMarker extends TileEntityCustom implements ITickable {
+    private static final int SEARCH_COUNT = 40;
+    private RailPosition rp;
+    private BlockPos startPos;
+@@ -40,38 +45,48 @@
     @SideOnly(Side.CLIENT)
     public InternalButton[] buttons;
     @SideOnly(Side.CLIENT)
     public float[][][] linePos;
     private int count;
-+   java.util.UUID owner;
-+   private Integer ownerEntityId;
++   @Nullable
++   private UUID owner;
  
     public TileEntityMarker() {
        this.markerState = MarkerState.DISTANCE.set(this.markerState, true);
@@ -23,14 +55,10 @@
        if (nbt.hasKey("RP")) {
 -         this.rp = RailPosition.readFromNBT(nbt.getCompoundTag("RP"));
 +         this.rp = RailPosition.readFromNBT(nbt.getCompoundTag("RP"), this.rp);
-+      }
-+
-+      if (nbt.hasUniqueId("Owner")) {
-+         this.owner = nbt.getUniqueId("Owner");
        }
  
-+      if (nbt.hasKey("OwnerEntityId")) {
-+         this.ownerEntityId = nbt.getInteger("OwnerEntityId");
++      if (nbt.hasUniqueId("Owner")) {
++         this.owner = nbt.getUniqueId("Owner");
 +      }
     }
  
@@ -47,60 +75,34 @@
        return nbt;
     }
  
-+   @Override
-+   public NBTTagCompound workaroundForGetUpdateTag(NBTTagCompound nbt) {
-+      if (rp != null) {
-+         nbt.setTag("RP", rp.writeToNBT());
-+      }
-+
-+      if (this.ownerEntityId != null) {
-+         nbt.setInteger("OwnerEntityId", this.ownerEntityId);
-+      }
-+
-+      return nbt;
-+   }
-+
     public void update() {
 -      if (this.rp == null) {
-+      if (this.rp == null && this.ownerEntityId != null) {
++      if (this.rp == null && this.owner != null) {
           byte b0 = BlockMarker.getMarkerDir(this.getBlockType(), this.getBlockMetadata());
           byte b1 = (byte)(this.getBlockType() == RTMBlock.markerSwitch ? 1 : 0);
           this.rp = new RailPosition(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(), b0, b1);
           if (this.getWorld().isRemote) {
              for(TileEntity tileentity : this.getWorld().loadedTileEntityList) {
-@@ -87,16 +114,29 @@
-             this.updateStartPos();
+@@ -88,15 +103,16 @@
              this.count = 0;
           }
  
           ++this.count;
-+      } else {
-+         net.minecraft.entity.player.EntityPlayer player = world.getPlayerEntityByUUID(owner);
-+         if (player != null) {
-+            int id = player.getEntityId();
-+
-+            if (ownerEntityId == null || ownerEntityId != id) {
-+               ownerEntityId = id;
-+
-+               net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
-+               world.notifyBlockUpdate(pos, state, state, 2);
-+            }
-+         }
        }
 -
     }
  
++   @SideOnly(Side.CLIENT)
     private void searchOtherMarkers() {
 -      ((BlockMarker)this.getBlockType()).makeRailMap(this, this.getX(), this.getY(), this.getZ());
-+      int entityId = net.minecraft.client.Minecraft.getMinecraft().player.getEntityId();
-+
-+      ((BlockMarker)this.getBlockType()).makeRailMap(this, entityId, this.getX(), this.getY(), this.getZ());
++      UUID uuid = Minecraft.getMinecraft().player.getUniqueID();
++      ((BlockMarker)this.getBlockType()).makeRailMap(this, uuid, this.getX(), this.getY(), this.getZ());
     }
  
     private void updateStartPos() {
        if (this.startPos != null) {
           TileEntity tileentity = this.getWorld().getTileEntity(this.startPos);
-@@ -139,11 +179,11 @@
+@@ -139,11 +155,11 @@
  
           for(int i = 0; i < arailmap.length; ++i) {
              RailPosition railposition = this.railMaps[i].getStartRP();
@@ -113,7 +115,7 @@
           this.railMaps = arailmap;
           this.linePos = (float[][][])null;
           this.createGrids();
-@@ -171,26 +211,26 @@
+@@ -171,26 +187,26 @@
        } else if (list.size() == 2) {
           if (list.get(0) != null && list.get(1) != null) {
              RailPosition railposition2 = this.getMarkerRP((BlockPos)list.get(0));
@@ -144,7 +146,7 @@
              if (this.railMaps != null) {
                 RailPosition railposition4 = this.railMaps[0].getStartRP();
                 blockpos = new BlockPos(railposition4.blockX, railposition4.blockY, railposition4.blockZ);
-@@ -223,11 +263,11 @@
+@@ -223,11 +239,11 @@
        }
  
     }
@@ -157,14 +159,19 @@
        if (!this.isCoreMarker()) {
           this.markerPosList.clear();
           this.grid = null;
-@@ -302,6 +342,10 @@
+@@ -302,6 +318,15 @@
  
     public String getStateString(MarkerState state) {
        boolean flag = state.get(this.markerState);
        return String.format("%s : %s", state.toString(), flag ? "ON" : "OFF");
     }
 +
-+   public Integer getOwnerEntityId() {
-+      return ownerEntityId;
++   @Nullable
++   public UUID getOwner() {
++      return owner;
++   }
++
++   public void setOwner(@NotNull UUID uuid) {
++      owner = uuid;
 +   }
  }

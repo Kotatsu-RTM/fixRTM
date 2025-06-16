@@ -1,6 +1,30 @@
 --- a/jp/ngt/rtm/rail/BlockMarker.java
 +++ b/jp/ngt/rtm/rail/BlockMarker.java
-@@ -63,10 +63,14 @@
+@@ -1,9 +1,11 @@
+ package jp.ngt.rtm.rail;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.Objects;
++import java.util.UUID;
+ import javax.annotation.Nullable;
+ import jp.ngt.ngtlib.block.BlockArgHolder;
+ import jp.ngt.ngtlib.block.BlockContainerCustomWithMeta;
+ import jp.ngt.ngtlib.block.BlockUtil;
+ import jp.ngt.ngtlib.math.NGTMath;
+@@ -37,10 +39,11 @@
+ import net.minecraft.util.math.AxisAlignedBB;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import org.jetbrains.annotations.NotNull;
+ 
+ public class BlockMarker extends BlockContainerCustomWithMeta {
+    public final BlockMarker.MarkerType markerType;
+ 
+    public BlockMarker(BlockMarker.MarkerType type) {
+@@ -63,10 +66,14 @@
        return BlockRenderLayer.CUTOUT_MIPPED;
     }
  
@@ -15,7 +39,7 @@
           items.add(new ItemStack(this, 1, 0));
           items.add(new ItemStack(this, 1, 4));
           break;
-@@ -85,18 +89,29 @@
+@@ -85,18 +92,30 @@
        return isDiagonal ? NGTMath.floor(NGTMath.normalizeAngle((double)placer.rotationYaw + 180.0D) / 90.0D) & 3 : NGTMath.floor(NGTMath.normalizeAngle((double)placer.rotationYaw + 180.0D) / 90.0D + 0.5D) & 3;
     }
  
@@ -23,61 +47,62 @@
        int i = stack.getItemDamage();
 +      if (i == com.anatawa12.fixRtm.rtm.rail.BlockMarker.MERGED_DAMAGE) {
 +         com.anatawa12.fixRtm.rtm.rail.BlockMarker.onBlockPlacedBy(this, world, pos, state, placer, stack);
-+         ((TileEntityMarker) BlockUtil.getTileEntity(world, pos)).owner = placer.getUniqueID();
++         ((TileEntityMarker) BlockUtil.getTileEntity(world, pos)).setOwner(placer.getUniqueID());
 +         return;
 +      }
        int j = getFacing(placer, i >= 4);
        int k = i / 4;
        BlockUtil.setBlock(world, pos, this, j + k * 4, 2);
-+      ((TileEntityMarker) BlockUtil.getTileEntity(world, pos)).owner = placer.getUniqueID();
++      ((TileEntityMarker) BlockUtil.getTileEntity(world, pos)).setOwner(placer.getUniqueID());
     }
  
     protected boolean onBlockActivated(BlockArgHolder holder, float hitX, float hitY, float hitZ) {
        World world = holder.getWorld();
        EntityPlayer entityplayer = holder.getPlayer();
-+      Integer owner = ((TileEntityMarker) world.getTileEntity(holder.getBlockPos())).getOwnerEntityId();
++      UUID owner = ((TileEntityMarker) world.getTileEntity(holder.getBlockPos())).getOwner();
 +
-+      if (owner == null || owner != entityplayer.getEntityId())
++      if (!Objects.equals(owner, entityplayer.getUniqueID())) {
 +         return true;
++      }
 +
        int i = holder.getBlockPos().getX();
        int j = holder.getBlockPos().getY();
        int k = holder.getBlockPos().getZ();
        ItemStack itemstack = entityplayer.inventory.getCurrentItem();
        if (itemstack != null) {
-@@ -121,49 +136,70 @@
+@@ -120,50 +139,68 @@
+       }
  
        return true;
     }
  
-    public void makeRailMap(TileEntityMarker marker, int x, int y, int z) {
+-   public void makeRailMap(TileEntityMarker marker, int x, int y, int z) {
 -      this.onMarkerActivated(marker.getWorld(), x, y, z, (EntityPlayer)null, false);
-+      this.makeRailMap(marker, (EntityPlayer) null, x, y, z);
++   public void makeRailMap(TileEntityMarker marker, @NotNull UUID uuid, int x, int y, int z) {
++      this.onMarkerActivated(marker.getWorld(), x, y, z, null, uuid, false);
 +   }
 +
-+   public void makeRailMap(TileEntityMarker marker, EntityPlayer player, int x, int y, int z) {
-+      this.onMarkerActivated(marker.getWorld(), x, y, z, player, false);
++   public boolean onMarkerActivated(World world, int x, int y, int z, @NotNull EntityPlayer player, boolean makeRail) {
++      return this.onMarkerActivated(world, x, y, z, player, player.getUniqueID(), makeRail);
     }
  
-+   public void makeRailMap(TileEntityMarker marker, Integer entityId, int x, int y, int z) {
-+      this.onMarkerActivated(marker.getWorld(), x, y, z, null, entityId, false);
-+   }
-+
-    public boolean onMarkerActivated(World world, int x, int y, int z, EntityPlayer player, boolean makeRail) {
-+      Integer entityId = null;
-+      if (player != null) entityId = player.getEntityId();
-+
-+      return this.onMarkerActivated(world, x, y, z, player, entityId, makeRail);
-+   }
-+
-+   public boolean onMarkerActivated(World world, int x, int y, int z, EntityPlayer player, Integer entityId, boolean makeRail) {
+-   public boolean onMarkerActivated(World world, int x, int y, int z, EntityPlayer player, boolean makeRail) {
++   private boolean onMarkerActivated(
++      World world,
++      int x,
++      int y,
++      int z,
++      @Nullable EntityPlayer player,
++      @NotNull UUID uuid,
++      boolean makeRail
++   ) {
        ResourceStateRail resourcestaterail = this.hasRail(player, makeRail);
        if (resourcestaterail == null) {
           return false;
        } else {
           boolean flag = player == null || player.capabilities.isCreativeMode;
 -         List<RailPosition> list = this.searchAllMarker(world, x, y, z);
-+         List<RailPosition> list = this.searchAllMarker(entityId, world, x, y, z);
++         List<RailPosition> list = this.searchAllMarker(uuid, world, x, y, z);
  
           for(RailPosition railposition : list) {
              railposition.addHeight((double)(resourcestaterail.blockHeight - 0.0625F));
@@ -90,7 +115,7 @@
  
 -   private List<RailPosition> searchAllMarker(World world, int x, int y, int z) {
 -      List<RailPosition> list = new ArrayList<>();
-+   private List<RailPosition> searchAllMarker(Integer entityId, World world, int x, int y, int z) {
++   private List<RailPosition> searchAllMarker(@NotNull UUID uuid, World world, int x, int y, int z) {
        int i = RTMCore.railGeneratingDistance;
        int j = i * 2;
        int k = RTMCore.railGeneratingHeight;
@@ -119,7 +144,7 @@
 +      List<RailPosition> list = world.loadedTileEntityList.stream()
 +         .filter(TileEntityMarker.class::isInstance)
 +         .map(TileEntityMarker.class::cast)
-+         .filter(tile -> entityId == null || java.util.Objects.equals(tile.getOwnerEntityId(), entityId))
++         .filter(tile -> java.util.Objects.equals(tile.getOwner(), uuid))
 +         .filter(tile -> xMin <= tile.getX() && tile.getX() <= xMax
 +            && yMin <= tile.getY() && tile.getY() <= yMax
 +            && zMin <= tile.getZ() && tile.getZ() <= zMax)
@@ -135,7 +160,7 @@
           if (arg0.switchType != arg1.switchType) {
              return arg1.switchType - arg0.switchType;
           } else {
-@@ -171,11 +207,16 @@
+@@ -171,11 +208,16 @@
           }
        });
        return list;
@@ -152,7 +177,7 @@
           if (railposition.hasScript()) {
              createCustomRail(world, railposition, state, makeRail, isCreative);
           }
-@@ -188,25 +229,26 @@
+@@ -188,25 +230,26 @@
              RailPosition railposition2 = railposition1.blockY >= railposition4.blockY ? railposition4 : railposition1;
              RailPosition railposition3 = railposition1.blockY >= railposition4.blockY ? railposition1 : railposition4;
              createNormalRail(world, railposition2, railposition3, state, makeRail, isCreative);
@@ -181,7 +206,7 @@
           if (BlockUtil.getBlock(world, end.blockX, end.blockY, end.blockZ) instanceof BlockMarker) {
              BlockUtil.setAir(world, end.blockX, end.blockY, end.blockZ);
           }
-@@ -247,14 +289,16 @@
+@@ -247,14 +290,16 @@
  
           return false;
        }
@@ -200,7 +225,7 @@
           RailMap[] arailmap = switchtype.getAllRailMap();
           if (arailmap == null) {
              return false;
-@@ -283,27 +327,28 @@
+@@ -283,27 +328,28 @@
                    tileentitylargerailswitchbase.setStartPoint(x, y, z);
                 }
  
@@ -232,7 +257,7 @@
                 return false;
              }
           }
-@@ -328,11 +373,11 @@
+@@ -328,11 +374,11 @@
        }
  
        if (l == 0) {
@@ -245,7 +270,7 @@
              BlockUtil.setBlock(world, i, j, k, RTMRail.TURNTABLE_CORE, 0, 3);
              TileEntityTurnTableCore tileentityturntablecore = (TileEntityTurnTableCore)BlockUtil.getTileEntity(world, i, j, k);
              tileentityturntablecore.setRailPositions(new RailPosition[]{start, end});
-@@ -379,10 +424,19 @@
+@@ -379,10 +425,19 @@
  
           return null;
        }

@@ -1,22 +1,36 @@
 --- a/jp/ngt/rtm/rail/RenderMarkerBlock.java
 +++ b/jp/ngt/rtm/rail/RenderMarkerBlock.java
-@@ -46,11 +46,14 @@
+@@ -28,10 +28,13 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ import org.lwjgl.input.Mouse;
+ import org.lwjgl.opengl.GL11;
+ 
++import java.util.Objects;
++import java.util.UUID;
++
+ @SideOnly(Side.CLIENT)
+ public final class RenderMarkerBlock extends TileEntitySpecialRenderer<TileEntityMarker> {
+    public static final RenderMarkerBlock INSTANCE = new RenderMarkerBlock();
+    private static final double FIT_RANGE_SQ = 4.0D;
+    private String[] displayStrings = new String[RTMCore.markerDisplayDistance / 10];
+@@ -46,11 +49,14 @@
     public boolean isGlobalRenderer(TileEntityMarker tileEntity) {
        return true;
     }
  
     public void render(TileEntityMarker tileEntity, double par2, double par4, double par6, float par8, int par9, float par10) {
 -      if (tileEntity.getMarkerRP() != null) {
-+      java.lang.Integer owner = tileEntity.getOwnerEntityId();
-+      int player = Minecraft.getMinecraft().player.getEntityId();
++      UUID owner = tileEntity.getOwner();
++      UUID player = Minecraft.getMinecraft().player.getUniqueID();
 +
-+      if (tileEntity.getMarkerRP() != null && owner != null && owner == player) {
++      if (tileEntity.getMarkerRP() != null && Objects.equals(owner, player)) {
           GL11.glPushMatrix();
           GL11.glEnable(32826);
           GL11.glDisable(2884);
           GLHelper.disableLighting();
           GL11.glTranslatef((float)par2, (float)par4, (float)par6);
-@@ -89,15 +92,15 @@
+@@ -89,15 +95,15 @@
     private void renderGUI(TileEntityMarker marker) {
        if (marker.gui == null) {
           int i = 61440;
@@ -34,7 +48,7 @@
           marker.buttons[0] = (new InternalButton(f4, f3, f, f1)).setColor(i).setListner((button) -> marker.flipState(MarkerState.ANCHOR21));
           f3 = f3 + f1 + 0.1F;
           marker.buttons[1] = (new InternalButton(f4, f3, f, f1)).setColor(i).setListner((button) -> marker.flipState(MarkerState.LINE2));
-@@ -105,10 +108,12 @@
+@@ -105,10 +111,12 @@
           marker.buttons[2] = (new InternalButton(f4, f3, f, f1)).setColor(i).setListner((button) -> marker.flipState(MarkerState.LINE1));
           f3 = f3 + f1 + 0.1F;
           marker.buttons[3] = (new InternalButton(f4, f3, f, f1)).setColor(i).setListner((button) -> marker.flipState(MarkerState.GRID));
@@ -47,7 +61,7 @@
              marker.gui.addButton(marker.buttons[j]);
           }
        }
-@@ -116,10 +121,11 @@
+@@ -116,10 +124,11 @@
        marker.buttons[0].setText(marker.getStateString(MarkerState.ANCHOR21), 16777215, 0.05F);
        marker.buttons[1].setText(marker.getStateString(MarkerState.LINE2), 16777215, 0.05F);
        marker.buttons[2].setText(marker.getStateString(MarkerState.LINE1), 16777215, 0.05F);
@@ -59,7 +73,7 @@
        if (marker.getState(MarkerState.LINE1)) {
           f5 = 1.0F;
        }
-@@ -166,14 +172,25 @@
+@@ -166,14 +175,25 @@
        for(int k = 1; k < this.displayStrings.length; ++k) {
           float f2 = (float)k * 10.0F;
  
@@ -85,7 +99,7 @@
  
        ngttessellator.draw();
        GL11.glEnable(3553);
-@@ -183,11 +200,15 @@
+@@ -183,11 +203,15 @@
           float f5 = (float)(j1 + 1) * 10.0F;
  
           for(int k1 = -1; k1 <= 1; ++k1) {
@@ -101,7 +115,7 @@
              String s = this.displayStrings[j1];
              int i1 = fontrenderer.getStringWidth(s) / 2;
              fontrenderer.drawString(s, -i1 / 2, -10, j);
-@@ -243,10 +264,36 @@
+@@ -243,10 +267,36 @@
              GL11.glPopMatrix();
           }
        }
@@ -138,7 +152,7 @@
     private void renderAnchor(TileEntityMarker marker, float x, float y, float z) {
        this.changeAnchor(marker);
        GL11.glPushMatrix();
-@@ -457,11 +504,11 @@
+@@ -457,11 +507,11 @@
  
              if (rendermarkerblock$markerelement == RenderMarkerBlock.MarkerElement.CANT_EDGE) {
                 float f6 = 80.0F;
@@ -151,7 +165,7 @@
  
                 railposition.cantEdge = f12;
                 marker.onChangeRailShape();
-@@ -543,19 +590,19 @@
+@@ -543,19 +593,19 @@
                 RailPosition railposition3 = this.getNeighborRail(marker);
                 float f2 = (float)Math.atan2(d6, d7);
                 float f13 = (float)(d6 / (double)MathHelper.sin(f2));
