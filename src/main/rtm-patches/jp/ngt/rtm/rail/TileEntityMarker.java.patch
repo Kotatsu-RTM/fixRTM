@@ -32,12 +32,13 @@
     private static final int SEARCH_COUNT = 40;
     private RailPosition rp;
     private BlockPos startPos;
-@@ -40,38 +45,48 @@
+@@ -40,45 +45,61 @@
     @SideOnly(Side.CLIENT)
     public InternalButton[] buttons;
     @SideOnly(Side.CLIENT)
     public float[][][] linePos;
     private int count;
++   private boolean isFirstTime = true;
 +   @Nullable
 +   private UUID owner;
  
@@ -81,9 +82,25 @@
           byte b0 = BlockMarker.getMarkerDir(this.getBlockType(), this.getBlockMetadata());
           byte b1 = (byte)(this.getBlockType() == RTMBlock.markerSwitch ? 1 : 0);
           this.rp = new RailPosition(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(), b0, b1);
-          if (this.getWorld().isRemote) {
-             for(TileEntity tileentity : this.getWorld().loadedTileEntityList) {
-@@ -88,15 +103,16 @@
+-         if (this.getWorld().isRemote) {
+-            for(TileEntity tileentity : this.getWorld().loadedTileEntityList) {
+-               if (tileentity instanceof TileEntityMarker) {
+-                  ((TileEntityMarker)tileentity).searchOtherMarkers();
++      }
++
++      if (isFirstTime) {
++         isFirstTime = false;
++
++         if (world.isRemote) {
++            for (TileEntity tileEntity : world.loadedTileEntityList) {
++               if (tileEntity instanceof TileEntityMarker) {
++                  ((TileEntityMarker) tileEntity).searchOtherMarkers();
+                }
+             }
+          }
+       }
+ 
+@@ -88,15 +109,16 @@
              this.count = 0;
           }
  
@@ -102,7 +119,7 @@
     private void updateStartPos() {
        if (this.startPos != null) {
           TileEntity tileentity = this.getWorld().getTileEntity(this.startPos);
-@@ -139,11 +155,11 @@
+@@ -139,11 +161,11 @@
  
           for(int i = 0; i < arailmap.length; ++i) {
              RailPosition railposition = this.railMaps[i].getStartRP();
@@ -115,7 +132,7 @@
           this.railMaps = arailmap;
           this.linePos = (float[][][])null;
           this.createGrids();
-@@ -171,26 +187,26 @@
+@@ -171,26 +193,26 @@
        } else if (list.size() == 2) {
           if (list.get(0) != null && list.get(1) != null) {
              RailPosition railposition2 = this.getMarkerRP((BlockPos)list.get(0));
@@ -146,7 +163,7 @@
              if (this.railMaps != null) {
                 RailPosition railposition4 = this.railMaps[0].getStartRP();
                 blockpos = new BlockPos(railposition4.blockX, railposition4.blockY, railposition4.blockZ);
-@@ -223,11 +239,11 @@
+@@ -223,11 +245,11 @@
        }
  
     }
@@ -159,7 +176,7 @@
        if (!this.isCoreMarker()) {
           this.markerPosList.clear();
           this.grid = null;
-@@ -302,6 +318,15 @@
+@@ -302,6 +324,15 @@
  
     public String getStateString(MarkerState state) {
        boolean flag = state.get(this.markerState);
