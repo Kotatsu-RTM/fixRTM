@@ -39,7 +39,7 @@
           items.add(new ItemStack(this, 1, 0));
           items.add(new ItemStack(this, 1, 4));
           break;
-@@ -85,18 +92,30 @@
+@@ -85,85 +92,114 @@
        return isDiagonal ? NGTMath.floor(NGTMath.normalizeAngle((double)placer.rotationYaw + 180.0D) / 90.0D) & 3 : NGTMath.floor(NGTMath.normalizeAngle((double)placer.rotationYaw + 180.0D) / 90.0D + 0.5D) & 3;
     }
  
@@ -58,8 +58,15 @@
  
     protected boolean onBlockActivated(BlockArgHolder holder, float hitX, float hitY, float hitZ) {
        World world = holder.getWorld();
++
++      TileEntity tileEntity = world.getTileEntity(holder.getBlockPos());
++      if (!(tileEntity instanceof TileEntityMarker)) {
++         return true;
++      }
++      TileEntityMarker marker = (TileEntityMarker) tileEntity;
++
        EntityPlayer entityplayer = holder.getPlayer();
-+      UUID owner = ((TileEntityMarker) world.getTileEntity(holder.getBlockPos())).getOwner();
++      UUID owner = marker.getOwner();
 +
 +      if (!Objects.equals(owner, entityplayer.getUniqueID())) {
 +         return true;
@@ -69,8 +76,28 @@
        int j = holder.getBlockPos().getY();
        int k = holder.getBlockPos().getZ();
        ItemStack itemstack = entityplayer.inventory.getCurrentItem();
-       if (itemstack != null) {
-@@ -120,50 +139,68 @@
+-      if (itemstack != null) {
+-         TileEntity tileentity = world.getTileEntity(holder.getBlockPos());
+-         if (!(tileentity instanceof TileEntityMarker)) {
+-            return true;
++      if (itemstack.getItem() == Item.getItemFromBlock(RTMBlock.marker) || itemstack.getItem() == Item.getItemFromBlock(RTMBlock.markerSwitch)) {
++         if (world.isRemote) {
++            entityplayer.openGui(RTMCore.instance, RTMCore.guiIdRailMarker, world, i, j, k);
+          }
+ 
+-         TileEntityMarker tileentitymarker = (TileEntityMarker)tileentity;
+-         if (itemstack.getItem() == Item.getItemFromBlock(RTMBlock.marker) || itemstack.getItem() == Item.getItemFromBlock(RTMBlock.markerSwitch)) {
+-            if (world.isRemote) {
+-               entityplayer.openGui(RTMCore.instance, RTMCore.guiIdRailMarker, world, i, j, k);
+-            }
+-
+-            return true;
+-         }
++         return true;
+       }
+ 
+       if (!world.isRemote && this.onMarkerActivated(world, i, j, k, entityplayer, true) && !entityplayer.capabilities.isCreativeMode) {
+          itemstack.shrink(1);
        }
  
        return true;
@@ -160,7 +187,7 @@
           if (arg0.switchType != arg1.switchType) {
              return arg1.switchType - arg0.switchType;
           } else {
-@@ -171,11 +208,16 @@
+@@ -171,11 +207,16 @@
           }
        });
        return list;
@@ -177,7 +204,7 @@
           if (railposition.hasScript()) {
              createCustomRail(world, railposition, state, makeRail, isCreative);
           }
-@@ -188,25 +230,26 @@
+@@ -188,25 +229,26 @@
              RailPosition railposition2 = railposition1.blockY >= railposition4.blockY ? railposition4 : railposition1;
              RailPosition railposition3 = railposition1.blockY >= railposition4.blockY ? railposition1 : railposition4;
              createNormalRail(world, railposition2, railposition3, state, makeRail, isCreative);
@@ -206,7 +233,7 @@
           if (BlockUtil.getBlock(world, end.blockX, end.blockY, end.blockZ) instanceof BlockMarker) {
              BlockUtil.setAir(world, end.blockX, end.blockY, end.blockZ);
           }
-@@ -247,14 +290,16 @@
+@@ -247,14 +289,16 @@
  
           return false;
        }
@@ -225,7 +252,7 @@
           RailMap[] arailmap = switchtype.getAllRailMap();
           if (arailmap == null) {
              return false;
-@@ -283,27 +328,28 @@
+@@ -283,27 +327,28 @@
                    tileentitylargerailswitchbase.setStartPoint(x, y, z);
                 }
  
@@ -257,7 +284,7 @@
                 return false;
              }
           }
-@@ -328,11 +374,11 @@
+@@ -328,11 +373,11 @@
        }
  
        if (l == 0) {
@@ -270,7 +297,7 @@
              BlockUtil.setBlock(world, i, j, k, RTMRail.TURNTABLE_CORE, 0, 3);
              TileEntityTurnTableCore tileentityturntablecore = (TileEntityTurnTableCore)BlockUtil.getTileEntity(world, i, j, k);
              tileentityturntablecore.setRailPositions(new RailPosition[]{start, end});
-@@ -379,10 +425,19 @@
+@@ -379,10 +424,19 @@
  
           return null;
        }
