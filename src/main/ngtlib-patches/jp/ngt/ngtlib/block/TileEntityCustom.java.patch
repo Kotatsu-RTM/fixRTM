@@ -1,6 +1,28 @@
 --- a/jp/ngt/ngtlib/block/TileEntityCustom.java
 +++ b/jp/ngt/ngtlib/block/TileEntityCustom.java
-@@ -30,17 +30,10 @@
+@@ -2,19 +2,21 @@
+ 
+ import jp.ngt.ngtlib.event.TickProcessEntry;
+ import jp.ngt.ngtlib.event.TickProcessQueue;
+ import jp.ngt.ngtlib.network.PacketNBT;
+ import jp.ngt.ngtlib.util.NGTUtil;
++import jp.ngt.rtm.rail.TileEntityMarker;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.network.NetworkManager;
+ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+ import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.util.math.AxisAlignedBB;
+ import net.minecraft.util.math.BlockPos;
+ import net.minecraft.world.World;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import org.jetbrains.annotations.NotNull;
+ 
+ public class TileEntityCustom extends TileEntity {
+    public void setPos(int x, int y, int z, int prevX, int prevY, int prevZ) {
+       this.setPos(new BlockPos(x, y, z));
+    }
+@@ -30,31 +32,45 @@
     public int getZ() {
        return this.getPos().getZ();
     }
@@ -16,9 +38,32 @@
        return new SPacketUpdateTileEntity(this.pos, -1, this.getUpdateTag());
     }
  
-    public NBTTagCompound getUpdateTag() {
-       return this.writeToNBT(new NBTTagCompound());
-@@ -49,12 +42,13 @@
+-   public NBTTagCompound getUpdateTag() {
+-      return this.writeToNBT(new NBTTagCompound());
++   /**
++    * 元のNGTLibの実装では、{@link TileEntity#writeToNBT(NBTTagCompound)}の値を返すようになっていたが、セーブデータに保存したい値と
++    * クライアントに更新を通知したい値が異なるタイルエンティティの場合(例: {@link TileEntityMarker})、制御ができず困る。<br>
++    * 本メソッドはsuperの戻り値を{@link TileEntityCustom#workaroundForGetUpdateTag(NBTTagCompound)}に渡して呼び出す構造とし、
++    * そちらをオーバーライドして通知する値を変更してもらうことで、メソッドの呼び出し規約を遵守しつつ、通知する値を制御可能とする。
++    * @return クライアントに通知する値が書き込まれたNBT
++    */
++   @NotNull
++   @Override
++   public final NBTTagCompound getUpdateTag() {
++      return workaroundForGetUpdateTag(super.getUpdateTag());
++   }
++
++   /**
++    * NGTLibが{@link TileEntityCustom#getUpdateTag()}で{@link TileEntity#writeToNBT(NBTTagCompound)}を呼び出している問題の
++    * ワークアラウンド。詳細は{@link TileEntityCustom#getUpdateTag()}を参照。
++    * メソッドの使用方法は{@link TileEntity#writeToNBT(NBTTagCompound)}と同じ。
++    * @param nbt 値を書き込む先の{@link NBTTagCompound}
++    * @return 値が書き込まれた後のNBT
++    */
++   public NBTTagCompound workaroundForGetUpdateTag(NBTTagCompound nbt) {
++      return writeToNBT(nbt);
+    }
+ 
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
        this.readFromNBT(pkt.getNbtCompound());
     }

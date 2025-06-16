@@ -1,6 +1,6 @@
 --- a/jp/ngt/rtm/rail/TileEntityMarker.java
 +++ b/jp/ngt/rtm/rail/TileEntityMarker.java
-@@ -40,38 +40,56 @@
+@@ -40,38 +40,65 @@
     @SideOnly(Side.CLIENT)
     public InternalButton[] buttons;
     @SideOnly(Side.CLIENT)
@@ -44,13 +44,22 @@
 +         nbt.setUniqueId("Owner", this.owner);
 +      }
 +
+       return nbt;
+    }
+ 
++   @Override
++   public NBTTagCompound workaroundForGetUpdateTag(NBTTagCompound nbt) {
++      if (rp != null) {
++         nbt.setTag("RP", rp.writeToNBT());
++      }
++
 +      if (this.ownerEntityId != null) {
 +         nbt.setInteger("OwnerEntityId", this.ownerEntityId);
 +      }
 +
-       return nbt;
-    }
- 
++      return nbt;
++   }
++
     public void update() {
 -      if (this.rp == null) {
 +      if (this.rp == null && this.ownerEntityId != null) {
@@ -59,18 +68,17 @@
           this.rp = new RailPosition(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(), b0, b1);
           if (this.getWorld().isRemote) {
              for(TileEntity tileentity : this.getWorld().loadedTileEntityList) {
-@@ -87,16 +105,29 @@
+@@ -87,16 +114,29 @@
              this.updateStartPos();
              this.count = 0;
           }
  
           ++this.count;
--      }
 +      } else {
 +         net.minecraft.entity.player.EntityPlayer player = world.getPlayerEntityByUUID(owner);
 +         if (player != null) {
 +            int id = player.getEntityId();
- 
++
 +            if (ownerEntityId == null || ownerEntityId != id) {
 +               ownerEntityId = id;
 +
@@ -78,7 +86,8 @@
 +               world.notifyBlockUpdate(pos, state, state, 2);
 +            }
 +         }
-+      }
+       }
+-
     }
  
     private void searchOtherMarkers() {
@@ -91,7 +100,7 @@
     private void updateStartPos() {
        if (this.startPos != null) {
           TileEntity tileentity = this.getWorld().getTileEntity(this.startPos);
-@@ -139,11 +170,11 @@
+@@ -139,11 +179,11 @@
  
           for(int i = 0; i < arailmap.length; ++i) {
              RailPosition railposition = this.railMaps[i].getStartRP();
@@ -104,7 +113,7 @@
           this.railMaps = arailmap;
           this.linePos = (float[][][])null;
           this.createGrids();
-@@ -171,26 +202,26 @@
+@@ -171,26 +211,26 @@
        } else if (list.size() == 2) {
           if (list.get(0) != null && list.get(1) != null) {
              RailPosition railposition2 = this.getMarkerRP((BlockPos)list.get(0));
@@ -135,7 +144,7 @@
              if (this.railMaps != null) {
                 RailPosition railposition4 = this.railMaps[0].getStartRP();
                 blockpos = new BlockPos(railposition4.blockX, railposition4.blockY, railposition4.blockZ);
-@@ -223,11 +254,11 @@
+@@ -223,11 +263,11 @@
        }
  
     }
@@ -148,7 +157,7 @@
        if (!this.isCoreMarker()) {
           this.markerPosList.clear();
           this.grid = null;
-@@ -302,6 +333,10 @@
+@@ -302,6 +342,10 @@
  
     public String getStateString(MarkerState state) {
        boolean flag = state.get(this.markerState);
