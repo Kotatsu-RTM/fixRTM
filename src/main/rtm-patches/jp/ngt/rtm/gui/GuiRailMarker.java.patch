@@ -1,6 +1,18 @@
 --- a/jp/ngt/rtm/gui/GuiRailMarker.java
 +++ b/jp/ngt/rtm/gui/GuiRailMarker.java
-@@ -48,18 +48,18 @@
+@@ -25,10 +25,11 @@
+    private GuiTextFieldCustom fieldAncH;
+    private GuiTextFieldCustom fieldAncV;
+    private GuiTextFieldCustom fieldCantCenter;
+    private GuiTextFieldCustom fieldCantEdge;
+    private GuiTextFieldCustom fieldCantRandom;
++   private GuiTextFieldCustom fieldHeight;
+    private GuiButton buttonScript;
+    private GuiTextFieldCustom fieldArgs;
+ 
+    public GuiRailMarker(TileEntityMarker par1) {
+       this.marker = par1;
+@@ -48,18 +49,19 @@
        this.buttonList.add(new GuiButton(0, this.width / 2 - 105, this.height - 28, 100, 20, I18n.format("gui.done", new Object[0])));
        this.buttonList.add(new GuiButton(1, this.width / 2 + 5, this.height - 28, 100, 20, I18n.format("gui.cancel", new Object[0])));
        this.buttonScript = new GuiButton(100, this.width - 140, 140, 110, 20, s);
@@ -21,13 +33,26 @@
 +      this.fieldCantCenter = this.setFloatField(this.width - 70, 20, 60, 20, String.valueOf(this.currentRP.cantCenter));
 +      this.fieldCantEdge = this.setFloatField(this.width - 70, 50, 60, 20, String.valueOf(this.currentRP.cantEdge));
 +      this.fieldCantRandom = this.setFloatField(this.width - 70, 80, 60, 20, String.valueOf(this.currentRP.cantRandom));
++      this.fieldHeight = this.setIntegerField(this.width - 70, 110, 60, 20, String.valueOf(this.currentRP.height));
 +      this.fieldArgs = this.setFloatField(this.width - 140, 170, 130, 20, s1);
        if (this.marker.getBlockType() == RTMBlock.markerSwitch) {
           this.fieldAncPitch.setEnabled(false);
           this.fieldAncV.setEnabled(false);
           this.fieldCantCenter.setEnabled(false);
           this.fieldCantEdge.setEnabled(false);
-@@ -105,24 +105,10 @@
+@@ -79,10 +81,11 @@
+       this.drawCenteredString(this.fontRenderer, "Anchor Length H", this.width - 110, 70, 16777215);
+       this.drawCenteredString(this.fontRenderer, "Anchor Length V", this.width - 110, 100, 16777215);
+       this.drawCenteredString(this.fontRenderer, "Cant Center", this.width - 40, 10, 16777215);
+       this.drawCenteredString(this.fontRenderer, "Cant Edge", this.width - 40, 40, 16777215);
+       this.drawCenteredString(this.fontRenderer, "Cant Random", this.width - 40, 70, 16777215);
++      this.drawCenteredString(this.fontRenderer, "Height", this.width - 40, 100, 0xFFFFFF);
+       this.drawCenteredString(this.fontRenderer, "Line Script", this.width - 75, 130, 16777215);
+       this.drawCenteredString(this.fontRenderer, "Line Script Args", this.width - 75, 160, 16777215);
+    }
+ 
+    private void renderLineAndAnchor() {
+@@ -105,32 +108,19 @@
        }
  
        super.actionPerformed(button);
@@ -52,3 +77,32 @@
        this.currentRP.anchorPitch = this.getFieldValue(this.fieldAncPitch, this.currentRP.anchorPitch);
        this.currentRP.anchorLengthHorizontal = this.getFieldValue(this.fieldAncH, this.currentRP.anchorLengthHorizontal);
        this.currentRP.anchorLengthVertical = this.getFieldValue(this.fieldAncV, this.currentRP.anchorLengthVertical);
+       this.currentRP.cantCenter = this.getFieldValue(this.fieldCantCenter, this.currentRP.cantCenter);
+       this.currentRP.cantEdge = this.getFieldValue(this.fieldCantEdge, this.currentRP.cantEdge);
+       this.currentRP.cantRandom = this.getFieldValue(this.fieldCantRandom, this.currentRP.cantRandom);
++      currentRP.setHeight(getHeight());
+       this.currentRP.scriptName = this.buttonScript.displayString;
+       this.currentRP.scriptArgs = this.fieldArgs.getText();
+    }
+ 
+    private float getFieldValue(GuiTextFieldCustom field, float defaultVal) {
+@@ -139,10 +129,19 @@
+       } catch (NumberFormatException numberformatexception) {
+          return defaultVal;
+       }
+    }
+ 
++   private byte getHeight() {
++      try {
++         byte value = Byte.parseByte(fieldHeight.getText());
++         return kotlin.ranges.RangesKt.coerceIn(value, (byte) 0, (byte) 15);
++      } catch (NumberFormatException exception) {
++         return currentRP.height;
++      }
++   }
++
+    private void sendPacket() {
+       this.updateValues();
+       RTMCore.NETWORK_WRAPPER.sendToServer(new PacketMarkerRPClient(this.marker));
+    }
+ }
