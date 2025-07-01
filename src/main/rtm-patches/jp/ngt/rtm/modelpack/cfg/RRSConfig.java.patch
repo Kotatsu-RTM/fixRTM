@@ -1,0 +1,14 @@
+--- a/jp/ngt/rtm/modelpack/cfg/RRSConfig.java
++++ b/jp/ngt/rtm/modelpack/cfg/RRSConfig.java
+@@ -3,10 +3,11 @@
+ public class RRSConfig extends TextureConfig {
+    public void init() {
+       super.init();
+       this.width = 0.5F;
+       this.height = 0.5F;
++      customIconTexture = texture;
+    }
+ 
+    public RRSConfig(String name) {
+       this.texture = fixName(name);
+    }
