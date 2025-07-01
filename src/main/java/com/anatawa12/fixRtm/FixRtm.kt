@@ -10,6 +10,8 @@ import com.anatawa12.fixRtm.crash.RTMAllModelPackInfoCrashCallable
 import com.anatawa12.fixRtm.crash.RTMSmallModelPackInfoCrashCallable
 import com.anatawa12.fixRtm.gui.GuiHandler
 import com.anatawa12.fixRtm.io.FIXFileLoader
+import com.anatawa12.fixRtm.item.OverrideTextureModel
+import com.anatawa12.fixRtm.item.OverrideTextureItemStackRenderer
 import com.anatawa12.fixRtm.network.NetworkHandler
 import com.anatawa12.fixRtm.ngtlib.util.VersionChecker
 import com.anatawa12.fixRtm.rtm.modelpack.init.ClientModelPackLoader
@@ -21,9 +23,12 @@ import com.anatawa12.fixRtm.utils.ThreadLocalProperties
 import jp.ngt.ngtlib.NGTCore
 import jp.ngt.rtm.RTMCore
 import jp.ngt.rtm.RTMItem
+import jp.ngt.rtm.entity.vehicle.VehicleType
+import jp.ngt.rtm.item.ItemInstalledObject
 import jp.ngt.rtm.rail.TileEntityLargeRailBase
 import net.minecraft.block.Block
 import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.block.model.ModelResourceLocation
 import net.minecraft.client.resources.IReloadableResourceManager
 import net.minecraft.crash.CrashReport
 import net.minecraft.entity.player.EntityPlayerMP
@@ -34,6 +39,7 @@ import net.minecraft.util.ResourceLocation
 import net.minecraft.util.text.Style
 import net.minecraft.util.text.TextComponentString
 import net.minecraft.util.text.TextFormatting
+import net.minecraftforge.client.event.ModelBakeEvent
 import net.minecraftforge.client.event.ModelRegistryEvent
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.RegistryEvent
@@ -129,6 +135,18 @@ object FixRtm {
             SoundSystemConfig.setNumberNormalChannels(1024)
             SoundSystemConfig.setNumberStreamingChannels(32)
         }
+
+        if (e.side == Side.CLIENT) {
+            arrayOf(
+                RTMItem.installedObject,
+                RTMItem.itemVehicle,
+                RTMItem.itemtrain,
+                RTMItem.itemMotorman,
+                RTMItem.itemCargo,
+                RTMItem.itemLargeRail,
+                RTMItem.itemWire,
+            ).forEach { it.tileEntityItemStackRenderer = OverrideTextureItemStackRenderer }
+        }
     }
 
     private val thrownMarker = CrashReport("", Throwable())
@@ -172,6 +190,39 @@ object FixRtm {
     fun registerModel(e: ModelRegistryEvent) {
         ClientRegistry.registerTileEntity(TestTileEntity::class.java, "test", TestSPRenderer)
         DummyModelObject.init()
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    fun onModelBake(event: ModelBakeEvent) {
+        if (!MainConfig.useCustomIconTexture) return
+
+        val overrideModels: List<ModelResourceLocation> = arrayOf(
+            *ItemInstalledObject.IstlObjType.entries
+                .filter { it.id >= 0 }
+                .filter { it != ItemInstalledObject.IstlObjType.RAILLOAD_SIGN || MainConfig.rrsImageAsIcon }
+                .map { ModelResourceLocation("rtm:istl_obj_${it.id}", "inventory") }
+                .toTypedArray(),
+            *VehicleType.entries
+                .map { ModelResourceLocation("rtm:vehicle_${it.id}}", "inventory") }
+                .toTypedArray(),
+            ModelResourceLocation("rtm:item_train_0", "inventory"),
+            ModelResourceLocation("rtm:item_train_1", "inventory"),
+            ModelResourceLocation("rtm:item_train_2", "inventory"),
+            ModelResourceLocation("rtm:item_train_3", "inventory"),
+            ModelResourceLocation("rtm:item_train_fixrtm_test", "inventory"),
+            ModelResourceLocation("rtm:item_npc_1", "inventory"),
+            ModelResourceLocation("rtm:cargo_0", "inventory"),
+            ModelResourceLocation("rtm:cargo_1", "inventory"),
+            ModelResourceLocation("rtm:item_large_rail", "inventory"),
+            ModelResourceLocation("rtm:item_wire", "inventory"),
+        )
+
+        overrideModels.forEach {
+            val baseModel = event.modelManager.getModel(it)
+            val customRendererModel = OverrideTextureModel(baseModel)
+            event.modelRegistry.putObject(it, customRendererModel)
+        }
     }
 
     fun registerGenerators() {

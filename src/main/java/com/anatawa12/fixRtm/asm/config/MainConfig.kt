@@ -15,6 +15,7 @@ object MainConfig {
     private const val categoryFixRTM = "fixrtm"
     private const val categoryModelLoading = "model_loading"
     private const val categoryBetterRtm = "better_rtm"
+    private const val CATEGORY_CUSTOM_ITEM_ICON = "$categoryBetterRtm.custom_item_icon"
     private const val categoryBetterNgtLib = "better_ngtlib"
 
     val modelPackLoadSpeed: ModelPackLoadSpeed
@@ -101,6 +102,23 @@ object MainConfig {
         """
             fix compatibility problem with CustomNPCs using ThreadLocalProperties.
             ThreadLocalProperties is not stable enough so this fix is optional.
+        """.trimIndent()
+    )
+
+    val useCustomIconTexture = config.getBoolean(
+        "useCustomIconTexture", CATEGORY_CUSTOM_ITEM_ICON,
+        true,
+        """
+            Allow to use item icons per model in model pack.
+            Ported from KaizPatchX.
+        """.trimIndent()
+    )
+
+    val rrsImageAsIcon = config.getBoolean(
+        "rrsImageAsIcon", CATEGORY_CUSTOM_ITEM_ICON,
+        true,
+        """
+            Use images of railroad signs as item icons.
         """.trimIndent()
     )
 
