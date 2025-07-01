@@ -47,7 +47,7 @@ object OverrideTextureItemStackRenderer : TileEntityItemStackRenderer() {
             var j = 5 * i
             GL11.glColor3f(COLOR[0], COLOR[1], COLOR[2])
             GL11.glTexCoord2f(VERTICES[j++], VERTICES[j++])
-            GL11.glVertex3f(VERTICES[j++], VERTICES[j++], VERTICES[j++])
+            GL11.glVertex3f(VERTICES[j++], VERTICES[j++], VERTICES[j])
         }
         GL11.glEnd()
 
