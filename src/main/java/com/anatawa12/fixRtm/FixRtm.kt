@@ -197,7 +197,7 @@ object FixRtm {
     fun onModelBake(event: ModelBakeEvent) {
         if (!MainConfig.useCustomIconTexture) return
 
-        val overrideModels: List<ModelResourceLocation> = arrayOf(
+        val overrideModels: Array<ModelResourceLocation> = arrayOf(
             *ItemInstalledObject.IstlObjType.entries
                 .filter { it.id >= 0 }
                 .filter { it != ItemInstalledObject.IstlObjType.RAILLOAD_SIGN || MainConfig.rrsImageAsIcon }
