@@ -1,19 +1,97 @@
 --- a/jp/ngt/rtm/electric/TileEntityElectricalWiring.java
 +++ b/jp/ngt/rtm/electric/TileEntityElectricalWiring.java
-@@ -19,11 +19,11 @@
+@@ -1,31 +1,39 @@
+ package jp.ngt.rtm.electric;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Random;
++import java.util.UUID;
++import java.util.stream.StreamSupport;
++
+ import jp.ngt.ngtlib.block.BlockUtil;
+ import jp.ngt.ngtlib.block.TileEntityCustom;
+ import jp.ngt.rtm.RTMCore;
+ import jp.ngt.rtm.RTMItem;
+ import jp.ngt.rtm.entity.EntityElectricalWiring;
+ import jp.ngt.rtm.item.ItemWithModel;
+ import jp.ngt.rtm.modelpack.state.ResourceState;
+ import jp.ngt.rtm.network.PacketWire;
+ import net.minecraft.block.Block;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.item.ItemStack;
+ import net.minecraft.nbt.NBTTagCompound;
++import net.minecraft.nbt.NBTTagList;
+ import net.minecraft.tileentity.TileEntity;
  import net.minecraft.util.EnumParticleTypes;
  import net.minecraft.util.ITickable;
  import net.minecraft.util.math.AxisAlignedBB;
  import net.minecraft.world.World;
++import net.minecraftforge.common.util.Constants;
++import net.minecraftforge.fml.relauncher.Side;
++import net.minecraftforge.fml.relauncher.SideOnly;
  
 -public abstract class TileEntityElectricalWiring extends TileEntityCustom implements ITickable {
 +public abstract class TileEntityElectricalWiring extends jp.ngt.ngtlib.block.TileEntityPlaceable implements ITickable {
     protected List<Connection> connections = new ArrayList<>();
-    public boolean isActivated;
+-   public boolean isActivated;
++   private final List<UUID> activatedPlayers = new ArrayList<>();
     private int signal;
     private int prevSignal = -1;
  
-@@ -73,10 +73,14 @@
+    public void readFromNBT(NBTTagCompound nbt) {
+       super.readFromNBT(nbt);
+@@ -44,10 +52,22 @@
+          for(Connection connection1 : list) {
+             WireManager.INSTANCE.removeWire(this, connection1);
+          }
+       }
+ 
++      activatedPlayers.clear();
++      if (nbt.hasKey("ActivatedPlayers")) {
++         NBTTagList compounds = nbt.getTagList("ActivatedPlayers", Constants.NBT.TAG_COMPOUND);
++         StreamSupport.stream(compounds.spliterator(), false)
++            .filter(compound -> compound instanceof NBTTagCompound)
++            .map(compound -> (NBTTagCompound) compound)
++            .forEach(compound -> {
++               if (compound.hasUniqueId("UUID")) {
++                  activatedPlayers.add(compound.getUniqueId("UUID"));
++               }
++            });
++      }
+    }
+ 
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+       if (this.isBlockTile()) {
+          super.writeToNBT(nbt);
+@@ -59,10 +79,25 @@
+ 
+       Connection.writeListToNBT(nbt, this.connections);
+       return nbt;
+    }
+ 
++   @Override
++   public NBTTagCompound workaroundForGetUpdateTag(NBTTagCompound nbt) {
++      writeToNBT(nbt);
++
++      NBTTagList activatedPlayersTag = new NBTTagList();
++      for (UUID activatedPlayer : activatedPlayers) {
++         NBTTagCompound compound = new NBTTagCompound();
++         compound.setUniqueId("UUID", activatedPlayer);
++         activatedPlayersTag.appendTag(compound);
++      }
++      nbt.setTag("ActivatedPlayers", activatedPlayersTag);
++
++      return nbt;
++   }
++
+    protected Connection getConnection(int x, int y, int z) {
+       for(Connection connection : this.connections) {
+          if (connection.x == x && connection.y == y && connection.z == z) {
+             return connection;
+          }
+@@ -73,10 +108,14 @@
  
     public List<Connection> getConnnectionList() {
        return this.connections;
@@ -28,15 +106,124 @@
        if (type == Connection.ConnectionType.NONE) {
           Connection connection = this.getConnection(x, y, z);
           if (connection != null) {
-@@ -275,34 +279,39 @@
+@@ -165,11 +204,12 @@
+ 
+    }
+ 
+    public void update() {
+       if (this.world.isRemote) {
+-         if (this.isActivated) {
++         boolean isActivated = activatedPlayers.contains(Minecraft.getMinecraft().player.getUniqueID());
++         if (isActivated) {
+             Random random = this.world.rand;
+ 
+             for(int i = 0; i < 3; ++i) {
+                double d0 = (double)((float)this.getX() + random.nextFloat());
+                double d1 = (double)((float)this.getY() + random.nextFloat());
+@@ -197,69 +237,65 @@
+    public static ResourceState getWireType(EntityPlayer player) {
+       ItemStack itemstack = player.inventory.getCurrentItem();
+       return itemstack != null && itemstack.getItem() == RTMItem.itemWire ? ((ItemWithModel)itemstack.getItem()).getModelState(itemstack) : null;
+    }
+ 
++   @SideOnly(Side.SERVER)
+    public boolean onRightClick(EntityPlayer player) {
+-      boolean flag = false;
+-      if (this.isActivated) {
+-         this.isActivated = false;
+-         this.setConnectionTo(player.getEntityId(), -1, 0, Connection.ConnectionType.NONE, (ResourceState)null);
+-         flag = true;
++      UUID uuid = player.getUniqueID();
++      if (activatedPlayers.contains(uuid)) {
++         activatedPlayers.remove(uuid);
++         setConnectionTo(player.getEntityId(), -1, 0, Connection.ConnectionType.NONE, null);
+       } else {
+-         ResourceState resourcestate = getWireType(player);
+-         if (resourcestate == null) {
+-            if (this.disconnection()) {
++         ResourceState<?> resourceState = getWireType(player);
++         if (resourceState == null) {
++            if (disconnection(uuid)) {
+                return true;
+             }
+-
+-            this.isActivated = true;
+-            flag = true;
++            activatedPlayers.add(uuid);
+          } else {
+-            if (this.createConnection(player, resourcestate)) {
++            if (createConnection(player, resourceState)) {
+                if (!player.capabilities.isCreativeMode) {
+                   player.inventory.getCurrentItem().shrink(1);
+                }
+-
+                return true;
+             }
+ 
+-            this.isActivated = true;
+-            this.setConnectionTo(player.getEntityId(), -1, 0, Connection.ConnectionType.TO_PLAYER, resourcestate);
+-            flag = true;
++            activatedPlayers.add(uuid);
++            setConnectionTo(player.getEntityId(), -1, 0, Connection.ConnectionType.TO_PLAYER, resourceState);
+          }
+       }
+ 
+-      if (flag) {
+-         this.sendPacket();
+-      }
+-
+-      return flag;
++      sendPacket();
++      return true;
+    }
+ 
+-   private boolean disconnection() {
+-      TileEntityElectricalWiring tileentityelectricalwiring = this.searchActiveTEEW();
++   @SideOnly(Side.SERVER)
++   private boolean disconnection(UUID uuid) {
++      TileEntityElectricalWiring tileentityelectricalwiring = this.searchActiveTEEW(uuid);
+       if (tileentityelectricalwiring != null) {
+          Connection connection = this.getConnection(tileentityelectricalwiring.getX(), tileentityelectricalwiring.getY(), tileentityelectricalwiring.getZ());
+          if (connection != null) {
+-            tileentityelectricalwiring.isActivated = false;
++            tileentityelectricalwiring.activatedPlayers.remove(uuid);
+             this.setConnectionTo(tileentityelectricalwiring.getX(), tileentityelectricalwiring.getY(), tileentityelectricalwiring.getZ(), Connection.ConnectionType.NONE, (ResourceState)null);
+             return true;
+          }
+       }
  
        return false;
     }
  
-    private TileEntityElectricalWiring searchActiveTEEW() {
++   @SideOnly(Side.SERVER)
+    private boolean createConnection(EntityPlayer player, ResourceState state) {
+-      TileEntityElectricalWiring tileentityelectricalwiring = this.searchActiveTEEW();
++      UUID uuid = player.getUniqueID();
++      TileEntityElectricalWiring tileentityelectricalwiring = this.searchActiveTEEW(uuid);
+       if (tileentityelectricalwiring != null) {
+          Connection connection = this.getConnection(tileentityelectricalwiring.getX(), tileentityelectricalwiring.getY(), tileentityelectricalwiring.getZ());
+          if (connection == null && state != null) {
+             boolean flag = !(tileentityelectricalwiring instanceof TileEntityDummyEW);
+             Connection.ConnectionType connection$connectiontype = flag ? Connection.ConnectionType.WIRE : Connection.ConnectionType.TO_ENTITY;
+-            tileentityelectricalwiring.isActivated = false;
++            tileentityelectricalwiring.activatedPlayers.remove(uuid);
+             boolean flag1 = false;
+             if (this instanceof TileEntityDummyEW) {
+                connection$connectiontype = Connection.ConnectionType.TO_ENTITY;
+                flag1 = tileentityelectricalwiring.setConnectionTo(this.getX(), this.getY(), this.getZ(), connection$connectiontype, state);
+             } else {
+@@ -274,35 +310,41 @@
+       }
+ 
+       return false;
+    }
+ 
+-   private TileEntityElectricalWiring searchActiveTEEW() {
 -      int i = this.getX();
 -      int j = this.getY();
 -      int k = this.getZ();
++   @SideOnly(Side.SERVER)
++   private TileEntityElectricalWiring searchActiveTEEW(UUID uuid) {
 +      int x = this.getX();
 +      int y = this.getY();
 +      int z = this.getZ();
@@ -60,7 +247,7 @@
 +            .filter(tile -> tile != this)
 +            .filter(TileEntityElectricalWiring.class::isInstance)
 +            .map(TileEntityElectricalWiring.class::cast)
-+            .filter(tile -> tile.isActivated)
++            .filter(tile -> tile.activatedPlayers.contains(uuid))
 +            .filter(tile -> tile.getDistanceSq(x, y, z) < dis1)
 +            .min(java.util.Comparator.comparingDouble(o -> o.getDistanceSq(x, y, z)))
 +            .orElse(null);
@@ -79,7 +266,7 @@
 -         }
 +         return list.stream()
 +            .map(entity -> entity.tileEW)
-+            .filter(tileEW -> tileEW.isActivated)
++            .filter(tileEW -> ((TileEntityElectricalWiring) tileEW).activatedPlayers.contains(uuid))
 +            .min(java.util.Comparator.comparingDouble(o -> o.getDistanceSq(x, y, z)))
 +            .orElse(null);
        }
