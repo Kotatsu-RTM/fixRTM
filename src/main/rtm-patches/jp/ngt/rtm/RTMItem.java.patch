@@ -1,6 +1,28 @@
 --- a/jp/ngt/rtm/RTMItem.java
 +++ b/jp/ngt/rtm/RTMItem.java
-@@ -134,11 +134,11 @@
+@@ -1,7 +1,8 @@
+ package jp.ngt.rtm;
+ 
++import com.anatawa12.fixRtm.rtm.item.ItemWrench;
+ import jp.ngt.ngtlib.item.ItemMultiIcon;
+ import jp.ngt.ngtlib.item.SerializableItemType;
+ import jp.ngt.ngtlib.util.NGTRegHandler;
+ import jp.ngt.ngtlib.util.NGTUtilClient;
+ import jp.ngt.rtm.entity.vehicle.VehicleType;
+@@ -91,11 +92,11 @@
+       itemCargo = NGTRegHandler.register(new ItemCargo(), "item_cargo", "rtm:item_cargo", CreativeTabRTM.RAILWAY, "rtm");
+       itemLargeRail = NGTRegHandler.register(new ItemRail(), "item_large_rail", "rtm:item_large_rail", CreativeTabRTM.RAILWAY, "rtm");
+       itemVehicle = NGTRegHandler.register(new ItemVehicle(), "item_vehicle", "rtm:item_vehicle", CreativeTabRTM.RAILWAY, "rtm");
+       itemWire = NGTRegHandler.register(new ItemWire(), "item_wire", "rtm:item_wire", CreativeTabRTM.RAILWAY, "rtm");
+       crowbar = NGTRegHandler.register(new ItemCrowbar(), "crowbar", "rtm:crowbar", CreativeTabRTM.TOOLS, "rtm");
+-      wrench = NGTRegHandler.register(new Item(), "wrench", "rtm:wrench", (CreativeTabs)null, "rtm");
++      wrench = NGTRegHandler.register(ItemWrench.INSTANCE, "wrench", "rtm:wrench", CreativeTabRTM.TOOLS, "rtm");
+       bucketLiquid = NGTRegHandler.register(new ItemBucketLiquid(), "bucket_liquid", "rtm:bucket_liquid", CreativeTabRTM.INDUSTRY, "rtm");
+       iron_hacksaw = NGTRegHandler.register(new ItemHacksaw(), "iron_hacksaw", "rtm:iron_hacksaw", CreativeTabRTM.INDUSTRY, "rtm");
+       paddle = NGTRegHandler.register(new ItemPaddle(), "paddle", "rtm:paddle", CreativeTabRTM.INDUSTRY, "rtm");
+       bellows = NGTRegHandler.register(new ItemBellows(), "bellows", "rtm:bellows", CreativeTabRTM.INDUSTRY, "rtm");
+       paintTool = NGTRegHandler.register(new ItemPaintTool(), "paint_tool", "rtm:paint_tool", CreativeTabRTM.TOOLS, "rtm");
+@@ -134,11 +135,11 @@
        registerItemModels(installedObject, "istl_obj_", ItemInstalledObject.IstlObjType.values());
        registerItemModel(itemtrain, 0, "item_train_0");
        registerItemModel(itemtrain, 1, "item_train_1");
