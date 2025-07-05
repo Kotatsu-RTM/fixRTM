@@ -1,0 +1,63 @@
+--- a/jp/ngt/rtm/network/PacketWire.java
++++ b/jp/ngt/rtm/network/PacketWire.java
+@@ -18,43 +18,38 @@
+ import net.minecraftforge.fml.relauncher.Side;
+ 
+ public class PacketWire extends PacketCustom implements IMessageHandler<PacketWire, IMessage> {
+    public static final int ARRAY_SIZE = 4;
+    private boolean isBlock;
+-   private boolean isActivated;
+    private NBTTagCompound nbtData;
+ 
+    public PacketWire() {
+    }
+ 
+    public PacketWire(EntityElectricalWiring entity, TileEntityElectricalWiring tileEntity) {
+       super(entity);
+       this.isBlock = false;
+-      this.isActivated = tileEntity.isActivated;
+-      this.nbtData = new NBTTagCompound();
+-      tileEntity.writeToNBT(this.nbtData);
++      this.nbtData = tileEntity.getUpdateTag();
+    }
+ 
+    public PacketWire(TileEntityElectricalWiring tileEntity) {
+       super(tileEntity);
+-      this.isBlock = true;
+-      this.isActivated = tileEntity.isActivated;
+-      this.nbtData = new NBTTagCompound();
+-      tileEntity.writeToNBT(this.nbtData);
++      this.isBlock = true;;
++      this.nbtData = tileEntity.getUpdateTag();
+    }
+ 
+    public void toBytes(ByteBuf buffer) {
+       super.toBytes(buffer);
+       buffer.writeBoolean(this.isBlock);
+-      buffer.writeBoolean(this.isActivated);
++      buffer.writeBoolean(false); // Compatibility
+       ByteBufUtils.writeTag(buffer, this.nbtData);
+    }
+ 
+    public void fromBytes(ByteBuf buffer) {
+       super.fromBytes(buffer);
+       this.isBlock = buffer.readBoolean();
+-      this.isActivated = buffer.readBoolean();
++      buffer.readBoolean(); // Compatibility
+       this.nbtData = ByteBufUtils.readTag(buffer);
+    }
+ 
+    public IMessage onMessage(final PacketWire message, MessageContext ctx) {
+       TickProcessQueue.getInstance(Side.CLIENT).add(new TickProcessEntry() {
+@@ -79,11 +74,10 @@
+             tileentityelectricalwiring = ((EntityElectricalWiring)entity).tileEW;
+          }
+       }
+ 
+       if (tileentityelectricalwiring != null) {
+-         tileentityelectricalwiring.isActivated = message.isActivated;
+          tileentityelectricalwiring.readFromNBT(message.nbtData);
+          return true;
+       } else {
+          return false;
+       }

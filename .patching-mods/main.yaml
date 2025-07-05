@@ -168,6 +168,7 @@ mods:
       - jp.ngt.rtm.network.PacketSignalConverter
       - jp.ngt.rtm.network.PacketSyncItem
       - jp.ngt.rtm.network.PacketVehicleMovement
+      - jp.ngt.rtm.network.PacketWire
       - jp.ngt.rtm.rail.BlockLargeRailBase
       - jp.ngt.rtm.rail.BlockMarker
       - jp.ngt.rtm.rail.RenderMarkerBlock
