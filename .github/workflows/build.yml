@@ -2,9 +2,8 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches-ignore:
+      - master
   workflow_dispatch:
 
 jobs:
@@ -15,28 +14,8 @@ jobs:
       - name: Checkout codes
         uses: actions/checkout@v4.2.2
 
-      - name: Setup JDK 8
-        uses: actions/setup-java@v3.14.1
-        with:
-          distribution: zulu
-          java-version: 8
-          cache: gradle
+      - name: Setup environment
+        uses: ./.github/actions/setup-gradle-env
 
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4.4.1
-
-      - name: Prepare patching environment
-        run: ./gradlew preparePatchingEnvironment
-
-      - name: Apply patches
-        run: ./pm.apply-patches
-
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: jar
-          path: ./build/libs/*
-          retention-days: 30
+      - name: Build
+        uses: ./.github/actions/build

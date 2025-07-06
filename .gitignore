@@ -187,3 +187,6 @@ gradle-app.setting
 /logs
 
 .idea/
+
+# Avoid ignoring build action
+!/.github/actions/build/

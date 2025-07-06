@@ -1,0 +1,14 @@
+name: Patch mod version
+description: Patch mod version text for build
+
+inputs:
+  version:
+    description: The version of this build
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Apply patch
+      shell: bash
+      run: sed -i 's/^modVersion=.*$/modVersion=${{ inputs.version }}/' ./gradle.properties
