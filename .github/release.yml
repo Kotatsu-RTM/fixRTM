@@ -1,0 +1,20 @@
+changelog:
+  exclude:
+    labels:
+      - close/duplicated
+      - close/invalid
+      - close/wont
+      - type/support
+  categories:
+    - title: ✨ New features
+      labels:
+        - type/feature
+    - title: 💡 Improvements
+      labels:
+        - type/improvement
+    - title: 🛠️ Bugfixes
+      labels:
+        - type/bug
+    - title: 📋 Other changes
+      labels:
+        - "*"
