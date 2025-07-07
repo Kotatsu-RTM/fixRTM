@@ -9,6 +9,9 @@ jobs:
   gen-version:
     name: Generate build serial
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
     concurrency:
       group: ${{ github.repository }}-gen-indev-build-serial
       cancel-in-progress: false
