@@ -30,6 +30,8 @@ jobs:
 
       - name: Generate build serial
         id: script
+        env:
+          VARIABLE_KEY: "INDEV-SERIAL"
         uses: actions/github-script@v7.0.1
         with:
           github-token: ${{ steps.gh-app-token.outputs.token }}
