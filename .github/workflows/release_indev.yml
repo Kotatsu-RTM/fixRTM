@@ -46,7 +46,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2.3.2
         with:
-          name: [Indev] ${{ needs.gen-version.outputs.version }}
+          name: "[Indev] ${{ needs.gen-version.outputs.version }}"
           tag_name: ${{ needs.gen-version.outputs.version }}
           prerelease: true
           generate_release_notes: true
