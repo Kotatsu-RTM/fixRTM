@@ -11,9 +11,6 @@ module.exports = async ({process, github, context, core}) => {
         (response) => response.data,
     ));
 
-    github.rest.actions.listRepoVariables.endpoint
-    github.paginate()
-
     const index = variables.findIndex((v) => v.name === VARIABLE_KEY);
     if (index === -1) {
         core.notice(`Repository variable "${VARIABLE_KEY}" does not exist, create.`);
