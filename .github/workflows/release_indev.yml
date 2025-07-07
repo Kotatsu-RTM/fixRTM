@@ -21,7 +21,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const script = require("./script/gen-version.js");
+            const script = require("./.github/workflows/script/gen-version.js");
             return await script({process, github, context, core});
 
   release:
