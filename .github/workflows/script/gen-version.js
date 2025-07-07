@@ -7,8 +7,9 @@ module.exports = async ({process, github, context, core}) => {
         {
             owner: context.repo.owner,
             repo: context.repo.repo,
-        }
-    )).data.variables;
+        },
+        (response) => response.data,
+    ));
 
     github.rest.actions.listRepoVariables.endpoint
     github.paginate()
